@@ -3,17 +3,17 @@ package com.github.alechenninger.rally;
 import java.util.Date;
 
 public class TimeEntryValue {
-  private final Long timeEntryItemId;
+  private final String timeEntryItemId;
   private final Date date;
   private final Float hours;
 
-  public TimeEntryValue(Long timeEntryItemId, Date date, Float hours) {
+  public TimeEntryValue(String timeEntryItemId, Date date, Float hours) {
     this.timeEntryItemId = timeEntryItemId;
     this.date = date;
     this.hours = hours;
   }
 
-  public Long getTimeEntryItem() {
+  public String getTimeEntryItem() {
     return timeEntryItemId;
   }
 

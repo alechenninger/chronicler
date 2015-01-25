@@ -11,13 +11,13 @@ import java.util.TimeZone;
 
 public class TimeEntryItem {
   @SerializedName("Project")
-  private final Long projectId;
+  private final String projectId;
 
   @SerializedName("WorkProduct")
-  private final Long workProductId;
+  private final String workProductId;
 
   @SerializedName("Task")
-  private final Optional<Long> taskId;
+  private final Optional<String> taskId;
 
   @SerializedName("User")
   private final String user;
@@ -30,7 +30,7 @@ public class TimeEntryItem {
     setTimeZone(UTC);
   }};
 
-  public TimeEntryItem(Long projectId, Long workProductId, String user, Date weekStartDate) {
+  public TimeEntryItem(String projectId, String workProductId, String user, Date weekStartDate) {
     this.projectId = projectId;
     this.workProductId = workProductId;
     this.taskId = Optional.empty();
@@ -38,7 +38,7 @@ public class TimeEntryItem {
     this.weekStartDate = weekStartDate;
   }
 
-  public TimeEntryItem(Long projectId, Long workProductId, Long taskId, String user,
+  public TimeEntryItem(String projectId, String workProductId, String taskId, String user,
       Date weekStartDate) {
     this.projectId = projectId;
     this.workProductId = workProductId;
@@ -47,15 +47,15 @@ public class TimeEntryItem {
     this.weekStartDate = weekStartDate;
   }
 
-  public Long getProjectId() {
+  public String getProjectId() {
     return projectId;
   }
 
-  public Long getWorkProductId() {
+  public String getWorkProductId() {
     return workProductId;
   }
 
-  public Optional<Long> getTaskId() {
+  public Optional<String> getTaskId() {
     return taskId;
   }
 

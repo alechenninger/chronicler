@@ -8,6 +8,7 @@ import com.google.gson.GsonBuilder;
 import com.rallydev.rest.RallyRestApi;
 import com.rallydev.rest.request.CreateRequest;
 import com.rallydev.rest.request.QueryRequest;
+import com.rallydev.rest.response.CreateResponse;
 import com.rallydev.rest.response.QueryResponse;
 import com.rallydev.rest.util.QueryFilter;
 
@@ -50,10 +51,10 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
             });
 
         if (!hasTimeEntryItem(projectId, workProductId, taskId)) {
-          createTimeEntryItem(entry);
+          //createTimeEntryItem(entry);
         }
 
-        createTimeEntryValue(entry);
+        //createTimeEntryValue(entry);
       }
     } catch (IOException e) {
       throw new ChroniclerException(e);
@@ -61,14 +62,21 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
   }
 
   private void createTimeEntryItem(String projectId, String workProductId, Optional<String> taskId,
-      TimeEntry entry) {
+      TimeEntry entry) throws IOException {
     TimeEntryItem item;
 
     if (taskId.isPresent()) {
-      item = new TimeEntryItem(projectId, workProductId, taskId, user, weekStartDate(entry.getDay()));
+      item = new TimeEntryItem(projectId, workProductId, taskId.get(), user,
+          weekStartDate(entry.getDay()));
+    } else {
+      item = new TimeEntryItem(projectId, workProductId, user, weekStartDate(entry.getDay()));
     }
 
-    CreateRequest createTimeEntryItem = new CreateRequest("")
+    CreateRequest createTimeEntryItem = new CreateRequest("timeentryitem", item.toJson());
+    CreateResponse response = rally.create(createTimeEntryItem);
+
+    // What's in the response? (looking for id of newly created item)
+    System.out.println(response);
   }
 
   private Date weekStartDate(Date day) {
@@ -90,6 +98,7 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
       timeEntryItems.setQueryFilter(byProject.and(byWorkProduct));
     }
 
+    // TODO: Return Optional ID instead
     return rally.query(timeEntryItems).getTotalResultCount() > 0;
   }
 
