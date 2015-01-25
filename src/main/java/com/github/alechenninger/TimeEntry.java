@@ -1,33 +1,27 @@
 package com.github.alechenninger;
 
-import java.util.Optional;
+import java.util.Date;
 
 public class TimeEntry {
-  private final String projectName;
-  private final String workProductName;
-  private final Optional<String> taskName;
+  private final TimeEntryCoordinates coordinates;
+  private final Date day;
+  private final float hours;
 
-  public TimeEntry(String projectName, String workProductName) {
-    this.projectName = projectName;
-    this.workProductName = workProductName;
-    this.taskName = Optional.empty();
+  public TimeEntry(TimeEntryCoordinates coordinates, Date day, float hours) {
+    this.coordinates = coordinates;
+    this.day = day;
+    this.hours = hours;
   }
 
-  public TimeEntry(String projectName, String workProductName, String taskName) {
-    this.projectName = projectName;
-    this.workProductName = workProductName;
-    this.taskName = Optional.of(taskName);
+  public TimeEntryCoordinates getCoordinates() {
+    return coordinates;
   }
 
-  public String getProjectName() {
-    return projectName;
+  public Date getDay() {
+    return day;
   }
 
-  public String getWorkProductName() {
-    return workProductName;
-  }
-
-  public Optional<String> getTaskName() {
-    return taskName;
+  public float getHours() {
+    return hours;
   }
 }

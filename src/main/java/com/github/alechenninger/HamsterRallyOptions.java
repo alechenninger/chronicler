@@ -10,29 +10,25 @@ import org.apache.commons.cli.ParseException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class HamsterRallyOptions {
   private static Option API_KEY = new Option("k", "apiKey", true,
       "Rally API key. To generate or access API keys for your account, go to " +
       "'https://rally1.rallydev.com/login' and see 'API KEYS' in the top menu.");
 
-  private static Option SERVER = new Option("s", "server", true,
+  private static Option SERVER = new Option("h", "host", true,
       "Rally server URL. Defaults to 'https://rally1.rallydev.com'.");
 
-  private static Option REPORT = new Option("r", "report", true,
-      "File path for report. Can be relative or absolute. Must also specify a type via -t or --type.");
-
-  private static Option REPORT_TYPE = new Option("t", "type", true,
-      "Type of report. Available options are 'hamsterXml'.");
+  private static Option TIMESHEET_TYPE = new Option("t", "type", true,
+      "Type of timesheet. Available options are 'hamsterxml'. Additional options may be required "
+          + "depending on the timesheet type.");
 
   private static Option HELP = new Option("h", "help", false, "Show this menu.");
 
   private static Options OPTIONS = new Options()
       .addOption(API_KEY)
       .addOption(SERVER)
-      .addOption(REPORT)
+      .addOption(TIMESHEET_TYPE)
       .addOption(HELP);
 
   private final CommandLine cli;
@@ -61,30 +57,29 @@ public class HamsterRallyOptions {
     return new URI("https://rally1.rallydev.com");
   }
 
-  public Path report() {
-    if (!cli.hasOption(REPORT.getOpt())) {
-      throw new HamsterRallyException("No report file specified.");
-    }
-
-    return Paths.get(cli.getOptionValue(REPORT.getOpt()));
-  }
-
-  public String reportType() {
-    if (!cli.hasOption(REPORT_TYPE.getOpt())) {
+  public String timeSheetType() {
+    if (!cli.hasOption(TIMESHEET_TYPE.getOpt())) {
       throw new HamsterRallyException("No report type specified.");
     }
 
-    return cli.getOptionValue(REPORT_TYPE.getOpt());
+    return cli.getOptionValue(TIMESHEET_TYPE.getOpt());
   }
 
   public boolean helpRequested() {
     return cli.hasOption(HELP.getOpt());
   }
 
+  /**
+   * Additional arguments passed that were not parsed among base set of options.
+   */
+  public String[] additionalArgs() {
+    return cli.getArgs();
+  }
+
   public static void printHelpMessage() {
     HelpFormatter help = new HelpFormatter();
-    help.printHelp("java -jar hamster-rally.jar",
-        "Uploads a hamster timesheet report to Rally timesheets.",
+    help.printHelp("java -jar path-to-jar.jar",
+        "Uploads a timesheet report to Rally timesheets.",
         OPTIONS,
         "https://github.com/alechenninger/hamster-rally.git",
         true);

@@ -1,9 +1,13 @@
 package com.github.alechenninger.rally;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
+import java.util.TimeZone;
 
 public class TimeEntryItem {
   @SerializedName("Project")
@@ -20,6 +24,11 @@ public class TimeEntryItem {
 
   @SerializedName("WeekStartDate")
   private final Date weekStartDate;
+
+  private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
+  private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'") {{
+    setTimeZone(UTC);
+  }};
 
   public TimeEntryItem(Long projectId, Long workProductId, String user, Date weekStartDate) {
     this.projectId = projectId;
@@ -56,5 +65,15 @@ public class TimeEntryItem {
 
   public Date getWeekStartDate() {
     return weekStartDate;
+  }
+
+  public JsonObject toJson() {
+    JsonObject json = new JsonObject();
+    json.addProperty("Project", projectId);
+    json.addProperty("WorkProduct", workProductId);
+    taskId.ifPresent(t -> json.addProperty("Task", t));
+    json.addProperty("WeekStartDate", DATE_FORMAT.format(weekStartDate));
+    json.addProperty("User", user);
+    return json;
   }
 }

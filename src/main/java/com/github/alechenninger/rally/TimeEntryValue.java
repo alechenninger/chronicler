@@ -5,9 +5,9 @@ import java.util.Date;
 public class TimeEntryValue {
   private final Long timeEntryItemId;
   private final Date date;
-  private final Long hours;
+  private final Float hours;
 
-  public TimeEntryValue(Long timeEntryItemId, Date date, Long hours) {
+  public TimeEntryValue(Long timeEntryItemId, Date date, Float hours) {
     this.timeEntryItemId = timeEntryItemId;
     this.date = date;
     this.hours = hours;
@@ -21,7 +21,7 @@ public class TimeEntryValue {
     return date;
   }
 
-  public Long getHours() {
+  public Float getHours() {
     return hours;
   }
 }

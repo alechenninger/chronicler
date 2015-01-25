@@ -2,6 +2,6 @@ package com.github.alechenninger;
 
 import java.util.List;
 
-public interface Report {
+public interface TimeSheet {
   List<TimeEntry> getEntries();
 }
