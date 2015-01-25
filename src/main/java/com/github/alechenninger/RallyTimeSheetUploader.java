@@ -5,8 +5,6 @@ import com.github.alechenninger.rally.TimeEntryItem;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.rallydev.rest.RallyRestApi;
 import com.rallydev.rest.request.CreateRequest;
 import com.rallydev.rest.request.QueryRequest;
@@ -47,7 +45,7 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
               try {
                 return taskIdByName(task);
               } catch (IOException e) {
-                throw new HamsterRallyException(e);
+                throw new ChroniclerException(e);
               }
             });
 
@@ -58,7 +56,7 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
         createTimeEntryValue(entry);
       }
     } catch (IOException e) {
-      throw new HamsterRallyException(e);
+      throw new ChroniclerException(e);
     }
   }
 
@@ -104,7 +102,7 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
     QueryResponse result = rally.query(taskId);
 
     if (result.getTotalResultCount() == 0) {
-      throw new HamsterRallyException("No tasks found for task name, " + task);
+      throw new ChroniclerException("No tasks found for task name, " + task);
     }
 
     return result.getResults()
@@ -123,7 +121,7 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
     QueryResponse result = rally.query(taskId);
 
     if (result.getTotalResultCount() == 0) {
-      throw new HamsterRallyException("No tasks found for task name, " + workProduct);
+      throw new ChroniclerException("No tasks found for task name, " + workProduct);
     }
 
     return result.getResults()
@@ -142,7 +140,7 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
     QueryResponse result = rally.query(taskId);
 
     if (result.getTotalResultCount() == 0) {
-      throw new HamsterRallyException("No tasks found for task name, " + project);
+      throw new ChroniclerException("No tasks found for task name, " + project);
     }
 
     return result.getResults()

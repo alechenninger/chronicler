@@ -11,7 +11,7 @@
   </parent>
 
   <groupId>com.github.alechenninger</groupId>
-  <artifactId>hamster-rally</artifactId>
+  <artifactId>chronicler</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <build>
@@ -21,7 +21,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.github.alechenninger.HamsterRally</mainClass>
+              <mainClass>com.github.alechenninger.Chronicler</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

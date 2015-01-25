@@ -11,7 +11,7 @@ import org.apache.commons.cli.ParseException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class HamsterRallyOptions {
+public class ChroniclerOptions {
   private static Option API_KEY = new Option("k", "apiKey", true,
       "Rally API key. To generate or access API keys for your account, go to " +
       "'https://rally1.rallydev.com/login' and see 'API KEYS' in the top menu.");
@@ -33,17 +33,17 @@ public class HamsterRallyOptions {
 
   private final CommandLine cli;
 
-  public HamsterRallyOptions(String[] args) throws ParseException {
+  public ChroniclerOptions(String[] args) throws ParseException {
     this(args, new BasicParser());
   }
 
-  public HamsterRallyOptions(String[] args, CommandLineParser parser) throws ParseException {
+  public ChroniclerOptions(String[] args, CommandLineParser parser) throws ParseException {
     cli = parser.parse(OPTIONS, args);
   }
 
   public String apiKey() {
     if (!cli.hasOption(API_KEY.getOpt())) {
-      throw new HamsterRallyException("No api key specified.");
+      throw new ChroniclerException("No api key specified.");
     }
 
     return cli.getOptionValue(API_KEY.getOpt());
@@ -59,7 +59,7 @@ public class HamsterRallyOptions {
 
   public String timeSheetType() {
     if (!cli.hasOption(TIMESHEET_TYPE.getOpt())) {
-      throw new HamsterRallyException("No report type specified.");
+      throw new ChroniclerException("No report type specified.");
     }
 
     return cli.getOptionValue(TIMESHEET_TYPE.getOpt());

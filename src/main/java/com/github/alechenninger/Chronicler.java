@@ -1,12 +1,12 @@
 package com.github.alechenninger;
 
-public class HamsterRally {
+public class Chronicler {
 
   public static void main(String[] args) throws Exception {
-    HamsterRallyOptions options = new HamsterRallyOptions(args);
+    ChroniclerOptions options = new ChroniclerOptions(args);
 
     if (options.helpRequested()) {
-      HamsterRallyOptions.printHelpMessage();
+      ChroniclerOptions.printHelpMessage();
       return;
     }
 

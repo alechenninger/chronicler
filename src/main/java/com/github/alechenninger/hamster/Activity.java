@@ -21,7 +21,7 @@ public class Activity {
       @JsonProperty("tags") String tags,
       @JsonProperty("duration_minutes") int durationInMinutes,
       @JsonProperty("end_time")
-      @JsonFormat(shape =JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
+      @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss") Date endTime,
       @JsonProperty("start_time")
       @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
       Date startTime) {

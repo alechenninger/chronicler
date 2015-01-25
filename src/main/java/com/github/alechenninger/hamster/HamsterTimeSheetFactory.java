@@ -1,6 +1,6 @@
 package com.github.alechenninger.hamster;
 
-import com.github.alechenninger.HamsterRallyException;
+import com.github.alechenninger.ChroniclerException;
 import com.github.alechenninger.TimeEntryCoordinates;
 import com.github.alechenninger.TimeSheet;
 import com.github.alechenninger.TimeSheetFactory;
@@ -35,7 +35,7 @@ public class HamsterTimeSheetFactory implements TimeSheetFactory {
 
       return new HamsterTimeSheet(activities, categoryMap);
     } catch (IOException | ParseException e) {
-      throw new HamsterRallyException(e);
+      throw new ChroniclerException(e);
     }
   }
 }

@@ -1,6 +1,6 @@
 package com.github.alechenninger.hamster;
 
-import com.github.alechenninger.HamsterRallyException;
+import com.github.alechenninger.ChroniclerException;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -40,7 +40,7 @@ public class HamsterTimeSheetOptions {
       return Paths.get(cli.getOptionValue(REPORT.getOpt()));
     }
 
-    throw new HamsterRallyException("No report file specified, specify one via " + REPORT);
+    throw new ChroniclerException("No report file specified, specify one via " + REPORT);
   }
 
   public Path categoryMap() {
@@ -52,7 +52,7 @@ public class HamsterTimeSheetOptions {
       return DEFAULT_MAP;
     }
 
-    throw new HamsterRallyException("No category map specified, and default (" + DEFAULT_MAP + ") "
+    throw new ChroniclerException("No category map specified, and default (" + DEFAULT_MAP + ") "
         + "not found. A category map is necessary to translate Hamster activity categories to Rally"
         + " time sheet entries. Specify one via " + CATEGORY_MAP);
   }
