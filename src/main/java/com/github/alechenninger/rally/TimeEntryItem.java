@@ -1,5 +1,7 @@
 package com.github.alechenninger.rally;
 
+import com.github.alechenninger.RallyTimeSheetUploader;
+
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
@@ -24,11 +26,6 @@ public class TimeEntryItem {
 
   @SerializedName("WeekStartDate")
   private final Date weekStartDate;
-
-  private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
-  private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'") {{
-    setTimeZone(UTC);
-  }};
 
   public TimeEntryItem(String projectId, String workProductId, String user, Date weekStartDate) {
     this.projectId = projectId;
@@ -72,7 +69,7 @@ public class TimeEntryItem {
     json.addProperty("Project", projectId);
     json.addProperty("WorkProduct", workProductId);
     taskId.ifPresent(t -> json.addProperty("Task", t));
-    json.addProperty("WeekStartDate", DATE_FORMAT.format(weekStartDate));
+    json.addProperty("WeekStartDate", RallyTimeSheetUploader.ISO_8601_UTC.format(weekStartDate));
     json.addProperty("User", user);
     return json;
   }

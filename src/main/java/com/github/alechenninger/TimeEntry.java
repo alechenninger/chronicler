@@ -24,4 +24,45 @@ public class TimeEntry {
   public float getHours() {
     return hours;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    TimeEntry timeEntry = (TimeEntry) o;
+
+    if (Float.compare(timeEntry.hours, hours) != 0) {
+      return false;
+    }
+    if (!coordinates.equals(timeEntry.coordinates)) {
+      return false;
+    }
+    if (!day.equals(timeEntry.day)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = coordinates.hashCode();
+    result = 31 * result + day.hashCode();
+    result = 31 * result + (hours != +0.0f ? Float.floatToIntBits(hours) : 0);
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    return "TimeEntry{" +
+        "coordinates=" + coordinates +
+        ", day=" + day +
+        ", hours=" + hours +
+        '}';
+  }
 }

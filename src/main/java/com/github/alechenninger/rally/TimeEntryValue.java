@@ -1,5 +1,9 @@
 package com.github.alechenninger.rally;
 
+import com.github.alechenninger.RallyTimeSheetUploader;
+
+import com.google.gson.JsonObject;
+
 import java.util.Date;
 
 public class TimeEntryValue {
@@ -23,5 +27,13 @@ public class TimeEntryValue {
 
   public Float getHours() {
     return hours;
+  }
+
+  public JsonObject toJson() {
+    JsonObject json = new JsonObject();
+    json.addProperty("TimeEntryItem", "/timeentryitem/" + timeEntryItemId);
+    json.addProperty("DateVal", RallyTimeSheetUploader.ISO_8601_UTC.format(date));
+    json.addProperty("Hours", hours);
+    return json;
   }
 }

@@ -17,8 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 public class HamsterTimeSheetFactory implements TimeSheetFactory {
-  private static final ObjectMapper mapper = new XmlMapper()
-      .registerModule(new ParameterNamesModule());
+  private static final ObjectMapper xmlMapper = new XmlMapper();
+
+  private static final ObjectMapper jsonMapper = new ObjectMapper();
 
   @Override
   public TimeSheet parseTimeSheet(String[] additionalArgs) {
@@ -27,9 +28,9 @@ public class HamsterTimeSheetFactory implements TimeSheetFactory {
       Path categoryMapPath = options.categoryMap();
       Path report = options.report();
 
-      List<Activity> activities = mapper
+      List<Activity> activities = xmlMapper
           .readValue(report.toFile(), new TypeReference<List<Activity>>() {});
-      Map<String, TimeEntryCoordinates> categoryMap = mapper
+      Map<String, TimeEntryCoordinates> categoryMap = jsonMapper
           .readValue(categoryMapPath.toFile(),
               new TypeReference<Map<String, TimeEntryCoordinates>>() {});
 

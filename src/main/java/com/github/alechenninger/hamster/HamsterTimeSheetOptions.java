@@ -21,7 +21,8 @@ public class HamsterTimeSheetOptions {
       + " by name.");
 
   private static final Options OPTIONS = new Options()
-      .addOption(CATEGORY_MAP);
+      .addOption(CATEGORY_MAP)
+      .addOption(REPORT);
 
   private static final Path DEFAULT_MAP = Paths.get("categories.json");
 

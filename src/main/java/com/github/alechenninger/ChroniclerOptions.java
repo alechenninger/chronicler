@@ -23,12 +23,20 @@ public class ChroniclerOptions {
       "Type of timesheet. Available options are 'hamsterxml'. Additional options may be required "
           + "depending on the timesheet type.");
 
+  private static Option USER = new Option("u", "user", true, "Rally username to add time sheet "
+      + "entries to.");
+
+  private static Option WORKSPACE = new Option("w", "workspace", true, "Rally workspace name under "
+      + "your subscription (assumes 1 subscription for now) to use for timesheets.");
+
   private static Option HELP = new Option("h", "help", false, "Show this menu.");
 
   private static Options OPTIONS = new Options()
       .addOption(API_KEY)
       .addOption(SERVER)
       .addOption(TIMESHEET_TYPE)
+      .addOption(USER)
+      .addOption(WORKSPACE)
       .addOption(HELP);
 
   private final CommandLine cli;
@@ -43,7 +51,7 @@ public class ChroniclerOptions {
 
   public String apiKey() {
     if (!cli.hasOption(API_KEY.getOpt())) {
-      throw new ChroniclerException("No api key specified.");
+      throw new ChroniclerException("No api key specified: " + API_KEY);
     }
 
     return cli.getOptionValue(API_KEY.getOpt());
@@ -59,10 +67,26 @@ public class ChroniclerOptions {
 
   public String timeSheetType() {
     if (!cli.hasOption(TIMESHEET_TYPE.getOpt())) {
-      throw new ChroniclerException("No report type specified.");
+      throw new ChroniclerException("No report type specified: " + TIMESHEET_TYPE);
     }
 
     return cli.getOptionValue(TIMESHEET_TYPE.getOpt());
+  }
+
+  public String user() {
+    if (!cli.hasOption(USER.getOpt())) {
+      throw new ChroniclerException("No user specified: " + USER);
+    }
+
+    return cli.getOptionValue(USER.getOpt());
+  }
+
+  public String workspace() {
+    if (!cli.hasOption(WORKSPACE.getOpt())) {
+      throw new ChroniclerException("No workspace specified: " + WORKSPACE);
+    }
+
+    return cli.getOptionValue(WORKSPACE.getOpt());
   }
 
   public boolean helpRequested() {
