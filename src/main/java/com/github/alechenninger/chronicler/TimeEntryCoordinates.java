@@ -1,4 +1,4 @@
-package com.github.alechenninger;
+package com.github.alechenninger.chronicler;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

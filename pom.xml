@@ -17,11 +17,19 @@
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.github.alechenninger.Chronicler</mainClass>
+              <mainClass>com.github.alechenninger.chronicler.Chronicler</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

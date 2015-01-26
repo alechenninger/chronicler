@@ -1,15 +1,12 @@
-package com.github.alechenninger.rally;
+package com.github.alechenninger.chronicler.rally;
 
-import com.github.alechenninger.RallyTimeSheetUploader;
+import com.github.alechenninger.chronicler.RallyTimeSheetUploader;
 
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
-import java.util.TimeZone;
 
 public class TimeEntryItem {
   @SerializedName("Project")

@@ -1,7 +1,7 @@
-package com.github.alechenninger;
+package com.github.alechenninger.chronicler;
 
-import com.github.alechenninger.rally.TimeEntryItem;
-import com.github.alechenninger.rally.TimeEntryValue;
+import com.github.alechenninger.chronicler.rally.TimeEntryItem;
+import com.github.alechenninger.chronicler.rally.TimeEntryValue;
 
 import com.rallydev.rest.RallyRestApi;
 import com.rallydev.rest.request.CreateRequest;
@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAdjusters;
@@ -122,8 +121,8 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
   }
 
   /**
-   * Gets the {@link com.github.alechenninger.rally.TimeEntryItem} object ID that would align with
-   * this {@link com.github.alechenninger.TimeEntry}. If one does not exist, it is created.
+   * Gets the {@link com.github.alechenninger.chronicler.rally.TimeEntryItem} object ID that would align with
+   * this {@link TimeEntry}. If one does not exist, it is created.
    */
   private String ensureTimeEntryItem(String workspaceRef, String projectId,
       String workProductId, Optional<String> taskId, TimeEntry entry) throws IOException {

@@ -1,6 +1,6 @@
-package com.github.alechenninger.rally;
+package com.github.alechenninger.chronicler.rally;
 
-import com.github.alechenninger.RallyTimeSheetUploader;
+import com.github.alechenninger.chronicler.RallyTimeSheetUploader;
 
 import com.google.gson.JsonObject;
 

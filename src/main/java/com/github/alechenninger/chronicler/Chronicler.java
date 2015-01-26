@@ -1,4 +1,4 @@
-package com.github.alechenninger;
+package com.github.alechenninger.chronicler;
 
 import com.rallydev.rest.RallyRestApi;
 
@@ -14,8 +14,8 @@ public class Chronicler {
       return;
     }
 
-    TimeSheetFactory sheetFactory = TimeSheetFactory.byType(options.timeSheetType());
-    TimeSheet timeSheet = sheetFactory.parseTimeSheet(options.additionalArgs());
+    TimeSheetFactory sheetFactory = TimeSheetFactory.fromServiceLoaderInJar(options.sourcePlugin());
+    TimeSheet timeSheet = sheetFactory.getTimeSheet(options.additionalArgs());
 
     // TODO: This can be cleaned up quite a bit
     RallyRestApi rally = new RallyRestApi(options.server(), options.apiKey());

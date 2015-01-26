@@ -1,4 +1,4 @@
-package com.github.alechenninger;
+package com.github.alechenninger.chronicler;
 
 import java.util.Date;
 

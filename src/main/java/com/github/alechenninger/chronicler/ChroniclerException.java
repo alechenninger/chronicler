@@ -1,4 +1,4 @@
-package com.github.alechenninger;
+package com.github.alechenninger.chronicler;
 
 public class ChroniclerException extends RuntimeException {
   public ChroniclerException(String message) {

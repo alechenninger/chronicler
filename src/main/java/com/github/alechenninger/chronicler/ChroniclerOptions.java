@@ -1,4 +1,4 @@
-package com.github.alechenninger;
+package com.github.alechenninger.chronicler;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -10,6 +10,8 @@ import org.apache.commons.cli.ParseException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ChroniclerOptions {
   private static Option API_KEY = new Option("k", "apiKey", true,
@@ -19,9 +21,9 @@ public class ChroniclerOptions {
   private static Option SERVER = new Option("h", "host", true,
       "Rally server URL. Defaults to 'https://rally1.rallydev.com'.");
 
-  private static Option TIMESHEET_TYPE = new Option("t", "type", true,
-      "Type of timesheet. Available options are 'hamsterxml'. Additional options may be required "
-          + "depending on the timesheet type.");
+  private static Option SOURCE = new Option("s", "source", true,
+      "Source plugin: a jar that contains an implementation of TimeSheetFactory. This source "
+          + "plugin will generally require additional arguments of its own.");
 
   private static Option USER = new Option("u", "user", true, "Rally username to add time sheet "
       + "entries to.");
@@ -34,7 +36,7 @@ public class ChroniclerOptions {
   private static Options OPTIONS = new Options()
       .addOption(API_KEY)
       .addOption(SERVER)
-      .addOption(TIMESHEET_TYPE)
+      .addOption(SOURCE)
       .addOption(USER)
       .addOption(WORKSPACE)
       .addOption(HELP);
@@ -65,12 +67,12 @@ public class ChroniclerOptions {
     return new URI("https://rally1.rallydev.com");
   }
 
-  public String timeSheetType() {
-    if (!cli.hasOption(TIMESHEET_TYPE.getOpt())) {
-      throw new ChroniclerException("No report type specified: " + TIMESHEET_TYPE);
+  public Path sourcePlugin() {
+    if (!cli.hasOption(SOURCE.getOpt())) {
+      throw new ChroniclerException("No report type specified: " + SOURCE);
     }
 
-    return cli.getOptionValue(TIMESHEET_TYPE.getOpt());
+    return Paths.get(cli.getOptionValue(SOURCE.getOpt()));
   }
 
   public String user() {

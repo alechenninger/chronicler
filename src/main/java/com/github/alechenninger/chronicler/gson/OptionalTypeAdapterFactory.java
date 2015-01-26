@@ -1,4 +1,4 @@
-package com.github.alechenninger.gson;
+package com.github.alechenninger.chronicler.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
