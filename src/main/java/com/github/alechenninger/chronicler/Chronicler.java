@@ -1,5 +1,8 @@
 package com.github.alechenninger.chronicler;
 
+import com.github.alechenninger.chronicler.console.Exit;
+import com.github.alechenninger.chronicler.console.Prompter;
+
 import com.rallydev.rest.RallyRestApi;
 
 import java.io.IOException;
@@ -30,7 +33,7 @@ public class Chronicler {
     }));
 
     TimeSheetUploader uploader = new RallyTimeSheetUploader(rally, options.user(),
-        options.workspace());
+        options.workspace(), Prompter.systemPrompt(), Exit.systemExit());
 
     uploader.uploadTimeSheet(timeSheet);
   }

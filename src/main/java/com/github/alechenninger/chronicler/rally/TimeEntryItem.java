@@ -9,19 +9,10 @@ import java.util.Date;
 import java.util.Optional;
 
 public class TimeEntryItem {
-  @SerializedName("Project")
   private final String projectId;
-
-  @SerializedName("WorkProduct")
   private final String workProductId;
-
-  @SerializedName("Task")
   private final Optional<String> taskId;
-
-  @SerializedName("User")
   private final String user;
-
-  @SerializedName("WeekStartDate")
   private final Date weekStartDate;
 
   public TimeEntryItem(String projectId, String workProductId, String user, Date weekStartDate) {

@@ -48,7 +48,7 @@ public class ChroniclerOptions {
   }
 
   public ChroniclerOptions(String[] args, CommandLineParser parser) throws ParseException {
-    cli = parser.parse(OPTIONS, args);
+    cli = parser.parse(OPTIONS, args, true);
   }
 
   public String apiKey() {

@@ -1,5 +1,7 @@
 package com.github.alechenninger.chronicler;
 
+import com.github.alechenninger.chronicler.console.Exit;
+import com.github.alechenninger.chronicler.console.Prompter;
 import com.github.alechenninger.chronicler.rally.TimeEntryItem;
 import com.github.alechenninger.chronicler.rally.TimeEntryValue;
 
@@ -17,7 +19,9 @@ import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -33,15 +37,20 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
   private final RallyRestApi rally;
   private final String user;
   private final String workspaceName;
+  private final Prompter prompter;
+  private final Exit exit;
 
   public static final DateFormat ISO_8601_UTC = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'") {{
     setTimeZone(TimeZone.getTimeZone("UTC"));
   }};
 
-  public RallyTimeSheetUploader(RallyRestApi rally, String user, String workspaceName) {
+  public RallyTimeSheetUploader(RallyRestApi rally, String user, String workspaceName,
+      Prompter prompter, Exit exit) {
     this.rally = Objects.requireNonNull(rally, "rally");
     this.user = Objects.requireNonNull(user, "user");
     this.workspaceName = Objects.requireNonNull(workspaceName, "workspaceName");
+    this.prompter = Objects.requireNonNull(prompter, "prompter");
+    this.exit = Objects.requireNonNull(exit, "prompter");
   }
 
   @Override
@@ -78,56 +87,52 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
 
   private void createTimeEntryValue(String timeEntryItemId, TimeEntry entry) throws IOException {
     TimeEntryValue value = new TimeEntryValue(timeEntryItemId, entry.getDay(), entry.getHours());
-    CreateRequest newTimeEntryValue = new CreateRequest("timeentryvalue", value.toJson());
 
+    CreateRequest newTimeEntryValue = new CreateRequest("timeentryvalue", value.toJson());
     CreateResponse response = rally.create(newTimeEntryValue);
 
     if (!response.wasSuccessful()) {
-      logger.severe("Failed to create time entry value: " + response.getObject());
+      logger.severe("Failed to create time entry value: " + Arrays.toString(response.getErrors()));
     }
   }
 
-  private String createTimeEntryItem(String workspaceRef, String projectId, String workProductId,
-      Optional<String> taskId, TimeEntry entry) throws IOException {
-    TimeEntryItem item;
+  /**
+   * Gets the {@link com.github.alechenninger.chronicler.rally.TimeEntryItem} object ID that would
+   * align with this {@link TimeEntry}. If one does not exist, it is created.
+   */
+  private String ensureTimeEntryItem(String workspaceRef, String projectId,
+      String workProductId, Optional<String> taskId, TimeEntry entry) throws IOException {
+    Optional<String> itemId = getTimeEntryItem(workspaceRef, projectId, workProductId, taskId,
+        entry);
 
-    if (taskId.isPresent()) {
-      item = new TimeEntryItem(projectId, workProductId, taskId.get(), user,
-          weekStartDate(entry.getDay()));
-    } else {
-      item = new TimeEntryItem(projectId, workProductId, user, weekStartDate(entry.getDay()));
+    if (itemId.isPresent()) {
+      return itemId.get();
     }
 
-    CreateRequest newTimeEntryItem = new CreateRequest("timeentryitem", item.toJson());
+    return createTimeEntryItem(projectId, workProductId, taskId, entry);
+  }
 
+  private String createTimeEntryItem(String projectId, String workProductId,
+      Optional<String> taskId, TimeEntry entry) throws IOException {
+    Date weekStartDate = weekStartDate(entry.getDay());
+
+    TimeEntryItem item = taskId
+        .map(_taskId -> new TimeEntryItem(projectId, workProductId, _taskId, user, weekStartDate))
+        .orElse(new TimeEntryItem(projectId, workProductId, user, weekStartDate));
+
+    CreateRequest newTimeEntryItem = new CreateRequest("timeentryitem", item.toJson());
     newTimeEntryItem.setFetch(new Fetch(OBJECT_ID));
 
     CreateResponse response = rally.create(newTimeEntryItem);
 
     if (!response.wasSuccessful()) {
-      throw new ChroniclerException("Failed to create time entry item: " + response.getObject());
+      throw new ChroniclerException("Failed to create time entry item: "
+          + Arrays.toString(response.getErrors()));
     }
 
     return response.getObject()
         .get(OBJECT_ID)
         .getAsString();
-  }
-
-  private Date weekStartDate(Date date) {
-    // Would love to just use java.time everywhere but has poor serialization library support
-    ZonedDateTime entryDate = date.toInstant().atZone(ZoneId.of("UTC"));
-    ZonedDateTime weekStartDate = entryDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY));
-    return Date.from(weekStartDate.toInstant());
-  }
-
-  /**
-   * Gets the {@link com.github.alechenninger.chronicler.rally.TimeEntryItem} object ID that would align with
-   * this {@link TimeEntry}. If one does not exist, it is created.
-   */
-  private String ensureTimeEntryItem(String workspaceRef, String projectId,
-      String workProductId, Optional<String> taskId, TimeEntry entry) throws IOException {
-    return getTimeEntryItem(workspaceRef, projectId, workProductId, taskId, entry)
-        .orElse(createTimeEntryItem(workProductId, projectId, workProductId, taskId, entry));
   }
 
   private Optional<String> getTimeEntryItem(String workspaceRef, String projectId,
@@ -136,8 +141,8 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
 
     forTimeEntryItem.setWorkspace(workspaceRef);
 
-    QueryFilter byProject = new QueryFilter("Project", "=", projectId);
-    QueryFilter byWorkProduct = new QueryFilter("WorkProduct", "=", workProductId);
+    QueryFilter byProject = new QueryFilter("Project.ObjectID", "=", projectId);
+    QueryFilter byWorkProduct = new QueryFilter("WorkProduct.ObjectID", "=", workProductId);
     QueryFilter byUserName = new QueryFilter("User.UserName", "=", user);
     QueryFilter byWeekStartDate = new QueryFilter("WeekStartDate", "=",
         ISO_8601_UTC.format(weekStartDate(entry.getDay())));
@@ -154,12 +159,19 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
 
     QueryResponse response = rally.query(forTimeEntryItem);
 
+    if (!response.wasSuccessful()) {
+      throw new ChroniclerException("Failed to find existing time entry item (if any) for entry, "
+          + entry + ": " + Arrays.toString(response.getErrors()));
+    }
+
     if (response.getTotalResultCount() == 0) {
       return Optional.empty();
     }
 
     if (response.getTotalResultCount() > 1) {
-      // TODO
+      throw new ChroniclerException("Found multiple time entry items... somethings not right.\n"
+          + "Query was: " + forTimeEntryItem.getQueryFilter() + "\n"
+          + "Results were: " + response.getResults());
     }
 
     return Optional.of(response.getResults()
@@ -279,5 +291,13 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
         .getAsJsonObject()
         .get(OBJECT_ID)
         .getAsString();
+  }
+
+  private Date weekStartDate(Date date) {
+    // Would love to just use java.time everywhere but has poor serialization library support
+    ZonedDateTime entryDate = date.toInstant().atZone(ZoneId.of("UTC"));
+    ZonedDateTime weekStartDate = entryDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+        .truncatedTo(ChronoUnit.DAYS);
+    return Date.from(weekStartDate.toInstant());
   }
 }
