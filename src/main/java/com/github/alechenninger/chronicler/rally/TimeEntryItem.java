@@ -61,4 +61,55 @@ public class TimeEntryItem {
     json.addProperty("User", user);
     return json;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    TimeEntryItem that = (TimeEntryItem) o;
+
+    if (!projectId.equals(that.projectId)) {
+      return false;
+    }
+    if (!taskId.equals(that.taskId)) {
+      return false;
+    }
+    if (!user.equals(that.user)) {
+      return false;
+    }
+    if (!weekStartDate.equals(that.weekStartDate)) {
+      return false;
+    }
+    if (!workProductId.equals(that.workProductId)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = projectId.hashCode();
+    result = 31 * result + workProductId.hashCode();
+    result = 31 * result + taskId.hashCode();
+    result = 31 * result + user.hashCode();
+    result = 31 * result + weekStartDate.hashCode();
+    return result;
+  }
+
+  @Override
+  public String toString() {
+    return "TimeEntryItem{" +
+        "projectId='" + projectId + '\'' +
+        ", workProductId='" + workProductId + '\'' +
+        ", taskId=" + taskId +
+        ", user='" + user + '\'' +
+        ", weekStartDate=" + weekStartDate +
+        '}';
+  }
 }

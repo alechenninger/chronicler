@@ -92,7 +92,8 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
     CreateResponse response = rally.create(newTimeEntryValue);
 
     if (!response.wasSuccessful()) {
-      logger.severe("Failed to create time entry value: " + Arrays.toString(response.getErrors()));
+      logger.severe("Failed to create time entry value, " + value + ", for entry, " + entry + ": "
+          + Arrays.toString(response.getErrors()));
     }
   }
 
