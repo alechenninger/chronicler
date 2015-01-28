@@ -23,11 +23,14 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TimeZone;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class RallyTimeSheetUploader implements TimeSheetUploader {
   private static final Logger logger =  Logger.getLogger(RallyTimeSheetUploader.class.getName());
@@ -55,7 +58,7 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
 
   @Override
   public void uploadTimeSheet(TimeSheet timeSheet) {
-    List<TimeEntry> entries = timeSheet.getEntries();
+    List<TimeEntry> entries = consolidateEntries(timeSheet.getEntries());
 
     try {
       String workspaceRef = workspaceRefByName(workspaceName);
@@ -64,6 +67,7 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
       // This means can get project, work product, and time entry item only once per combination
       for (TimeEntry entry : entries) {
         TimeEntryCoordinates coordinates = entry.getCoordinates();
+
         String projectId = projectIdByName(coordinates.getProject(), workspaceRef);
         String workProductId = workProductIdByName(coordinates.getWorkProduct(), workspaceRef);
         Optional<String> taskId = coordinates.getTask()
@@ -300,5 +304,59 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
     ZonedDateTime weekStartDate = entryDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
         .truncatedTo(ChronoUnit.DAYS);
     return Date.from(weekStartDate.toInstant());
+  }
+
+  /**
+   * If multiple entries refer to the same item, accumulate their hours by day, by item. This
+   * prevents trying to create multiple time entry value's in rally for the same item for the same
+   * day, which would cause a unique constraint violation. Instead we just sum any aligning entries
+   * together.
+   */
+  private List<TimeEntry> consolidateEntries(List<TimeEntry> entries) {
+    Map<CooordinatesByDay, Float> consolidatedEntries = new HashMap<>();
+
+    // Sum each day and coordinate combination
+    for (TimeEntry entry : entries) {
+      TimeEntryCoordinates coordinates = entry.getCoordinates();
+      CooordinatesByDay coordsByDay = new CooordinatesByDay(coordinates, entry.getDay());
+      consolidatedEntries.merge(coordsByDay, entry.getHours(), Float::sum);
+    }
+
+    // Turn back into a list of entries, this time with only one entry per day / coord combo
+    return consolidatedEntries.entrySet()
+        .stream()
+        .map(e -> new TimeEntry(e.getKey().coordinates, e.getKey().day, e.getValue()))
+        .collect(Collectors.toList());
+  }
+
+  private static final class CooordinatesByDay {
+    final TimeEntryCoordinates coordinates;
+    final Date day;
+
+    CooordinatesByDay(TimeEntryCoordinates coordinates, Date day) {
+      this.coordinates = coordinates;
+      this.day = Date.from(day.toInstant().truncatedTo(ChronoUnit.DAYS));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+
+      CooordinatesByDay that = (CooordinatesByDay) o;
+
+      return coordinates.equals(that.coordinates) && day.equals(that.day);
+    }
+
+    @Override
+    public int hashCode() {
+      int result = coordinates.hashCode();
+      result = 31 * result + day.hashCode();
+      return result;
+    }
   }
 }
