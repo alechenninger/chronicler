@@ -155,7 +155,7 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
         ISO_8601_UTC.format(weekStartDate(entry.getDay())));
 
     if (taskId.isPresent()) {
-      QueryFilter byTask = new QueryFilter("Task", "=", taskId.get());
+      QueryFilter byTask = new QueryFilter("Task.ObjectID", "=", taskId.get());
 
       forTimeEntryItem.setQueryFilter(byUserName.and(byWeekStartDate).and(byProject)
           .and(byWorkProduct).and(byTask));
