@@ -69,11 +69,12 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
         TimeEntryCoordinates coordinates = entry.getCoordinates();
 
         String projectId = projectIdByName(coordinates.getProject(), workspaceRef);
-        String workProductId = workProductIdByName(coordinates.getWorkProduct(), workspaceRef);
+        String workProductId = workProductIdByNameAndProject(coordinates.getWorkProduct(),
+            projectId, workspaceRef);
         Optional<String> taskId = coordinates.getTask()
             .map((task) -> {
               try {
-                return taskIdByName(task, workspaceRef);
+                return taskIdByNameAndWorkProduct(task, workProductId, workspaceRef);
               } catch (IOException e) {
                 throw new ChroniclerException(e);
               }
@@ -188,18 +189,21 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
         .getAsString());
   }
 
-  private String taskIdByName(String task, String workspaceRef) throws IOException {
+  private String taskIdByNameAndWorkProduct(String task, String workProductId, String workspaceRef)
+      throws IOException {
     QueryRequest forTask = new QueryRequest("task");
     QueryFilter byName = new QueryFilter("Name", "=", task);
+    QueryFilter byWorkProduct = new QueryFilter("WorkProduct.ObjectID", "=", workProductId);
 
-    forTask.setQueryFilter(byName);
+    forTask.setQueryFilter(byName.and(byWorkProduct));
     forTask.setWorkspace(workspaceRef);
     forTask.setFetch(new Fetch(OBJECT_ID));
 
     QueryResponse result = rally.query(forTask);
 
     if (result.getTotalResultCount() == 0) {
-      throw new ChroniclerException("No tasks found for task name, " + task);
+      throw new ChroniclerException("No tasks found for task name, " + task + ", and work product "
+          + "id, " + workProductId);
     }
 
     return result.getResults()
@@ -209,18 +213,25 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
         .getAsString();
   }
 
-  private String workProductIdByName(String workProduct, String workspaceRef) throws IOException {
+  private String workProductIdByNameAndProject(String workProduct, String projectId,
+      String workspaceRef) throws IOException {
     QueryRequest forWorkProduct = new QueryRequest("artifact");
     QueryFilter byName = new QueryFilter("Name", "=", workProduct);
+    QueryFilter byProject = new QueryFilter("Project.ObjectID", "=", projectId);
 
-    forWorkProduct.setQueryFilter(byName);
+    forWorkProduct.setQueryFilter(byName.and(byProject));
     forWorkProduct.setWorkspace(workspaceRef);
     forWorkProduct.setFetch(new Fetch(OBJECT_ID));
 
     QueryResponse result = rally.query(forWorkProduct);
 
     if (result.getTotalResultCount() == 0) {
-      throw new ChroniclerException("No work products found for task name, " + workProduct);
+      throw new ChroniclerException("No work products found for name, " + workProduct);
+    }
+
+    if (result.getTotalResultCount() > 1) {
+      throw new ChroniclerException("Multiple work products found for name, " + workProduct
+          + ". I'm afraid I may record something in the wrong place.");
     }
 
     return result.getResults()
@@ -242,6 +253,11 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
 
     if (result.getTotalResultCount() == 0) {
       throw new ChroniclerException("No projects found for name, " + project);
+    }
+
+    if (result.getTotalResultCount() > 1) {
+      throw new ChroniclerException("Multiple projects found for name, " + project + ". I'm "
+          + "afraid I may record something in the wrong place.");
     }
 
     return result.getResults()
