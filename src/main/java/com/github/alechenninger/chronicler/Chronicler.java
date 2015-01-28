@@ -36,5 +36,7 @@ public class Chronicler {
         options.workspace(), Prompter.systemPrompt(), Exit.systemExit());
 
     uploader.uploadTimeSheet(timeSheet);
+
+    System.out.println("The Chronicler has successfully recorded your time sheet.");
   }
 }
