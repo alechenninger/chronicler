@@ -1,13 +1,14 @@
 package com.github.alechenninger.chronicler;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 public class TimeEntry {
   private final TimeEntryCoordinates coordinates;
   private final Date day;
-  private final float hours;
+  private final Float hours;
 
-  public TimeEntry(TimeEntryCoordinates coordinates, Date day, float hours) {
+  public TimeEntry(TimeEntryCoordinates coordinates, Date day, Float hours) {
     this.coordinates = coordinates;
     this.day = day;
     this.hours = hours;
@@ -21,7 +22,7 @@ public class TimeEntry {
     return day;
   }
 
-  public float getHours() {
+  public Float getHours() {
     return hours;
   }
 
@@ -36,13 +37,13 @@ public class TimeEntry {
 
     TimeEntry timeEntry = (TimeEntry) o;
 
-    if (Float.compare(timeEntry.hours, hours) != 0) {
-      return false;
-    }
     if (!coordinates.equals(timeEntry.coordinates)) {
       return false;
     }
     if (!day.equals(timeEntry.day)) {
+      return false;
+    }
+    if (!hours.equals(timeEntry.hours)) {
       return false;
     }
 
@@ -53,7 +54,7 @@ public class TimeEntry {
   public int hashCode() {
     int result = coordinates.hashCode();
     result = 31 * result + day.hashCode();
-    result = 31 * result + (hours != +0.0f ? Float.floatToIntBits(hours) : 0);
+    result = 31 * result + hours.hashCode();
     return result;
   }
 

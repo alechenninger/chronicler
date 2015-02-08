@@ -4,14 +4,20 @@ import com.github.alechenninger.chronicler.RallyTimeSheetUploader;
 
 import com.google.gson.JsonObject;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 
 public class TimeEntryValue {
   private final String timeEntryItemId;
   private final Date date;
-  private final Float hours;
+  private final BigDecimal hours;
 
   public TimeEntryValue(String timeEntryItemId, Date date, Float hours) {
+    this(timeEntryItemId, date, new BigDecimal(String.valueOf(hours)));
+  }
+
+  public TimeEntryValue(String timeEntryItemId, Date date, BigDecimal hours) {
     this.timeEntryItemId = timeEntryItemId;
     this.date = date;
     this.hours = hours;
@@ -25,15 +31,15 @@ public class TimeEntryValue {
     return date;
   }
 
-  public Float getHours() {
-    return hours;
+  public BigDecimal getHours() {
+    return hours.setScale(2, RoundingMode.HALF_UP);
   }
 
   public JsonObject toJson() {
     JsonObject json = new JsonObject();
-    json.addProperty("TimeEntryItem", "/timeentryitem/" + timeEntryItemId);
-    json.addProperty("DateVal", RallyTimeSheetUploader.ISO_8601_UTC.format(date));
-    json.addProperty("Hours", hours);
+    json.addProperty("TimeEntryItem", "/timeentryitem/" + getTimeEntryItem());
+    json.addProperty("DateVal", RallyTimeSheetUploader.ISO_8601_UTC.format(getDateVal()));
+    json.addProperty("Hours", getHours());
     return json;
   }
 
