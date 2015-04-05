@@ -122,7 +122,7 @@ public class CmdLineChroniclerOptions implements ChroniclerOptions {
     help.printHelp("java -jar path-to-jar.jar",
         "Uploads a timesheet report to Rally timesheets.",
         OPTIONS,
-        "https://github.com/alechenninger/hamster-rally.git",
+        "https://github.com/alechenninger/chronicler.git",
         true);
   }
 }
