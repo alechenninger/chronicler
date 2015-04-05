@@ -1,6 +1,5 @@
 package com.github.alechenninger.chronicler;
 
-import java.math.BigDecimal;
 import java.util.Date;
 
 public class TimeEntry {

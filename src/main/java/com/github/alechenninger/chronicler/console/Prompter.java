@@ -3,7 +3,7 @@ package com.github.alechenninger.chronicler.console;
 import java.util.Optional;
 
 public interface Prompter {
-  public static Prompter systemPrompt() {
+  static Prompter systemPrompt() {
     return new BasicPrompter(System.in, System.out);
   }
 

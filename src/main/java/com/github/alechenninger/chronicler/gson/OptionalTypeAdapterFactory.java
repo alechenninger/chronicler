@@ -16,7 +16,7 @@ import java.util.Optional;
 /**
  * For Java 8's {@link java.util.Optional} type.
  */
-public class OptionalTypeAdapterFactory implements TypeAdapterFactory{
+public class OptionalTypeAdapterFactory implements TypeAdapterFactory {
   @Override
   public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
     Type type = typeToken.getType();

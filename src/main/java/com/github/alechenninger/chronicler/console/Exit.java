@@ -7,7 +7,7 @@ public interface Exit {
    */
   <T> T exitWithStatus(int status);
 
-  public static Exit systemExit() {
+  static Exit systemExit() {
     return new Exit() {
       @Override
       public <T> T exitWithStatus(int status) {
