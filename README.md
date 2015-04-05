@@ -6,4 +6,6 @@ I suppose it could also be flexible about where the destination is, and perhaps 
 
 ## Source plugins
 
-Included is a plugin for [Hamster](https://github.com/projecthamster/hamster) activity reports.
+[chronicler-hamster][1] is a plugin for [Hamster](https://github.com/projecthamster/hamster) activity reports.
+
+[1]: https://github.com/alechenninger/chronicler-hamster
