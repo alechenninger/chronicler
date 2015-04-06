@@ -36,7 +36,7 @@
           <descriptorRefs>
             <descriptorRef>jar-with-dependencies</descriptorRef>
           </descriptorRefs>
-          <finalName>${artifactId}-standalone</finalName>
+          <finalName>${artifactId}-${version}-standalone</finalName>
           <appendAssemblyId>false</appendAssemblyId>
           <attach>false</attach> <!-- Whether it will be deployed with mvn deploy or not -->
         </configuration>
