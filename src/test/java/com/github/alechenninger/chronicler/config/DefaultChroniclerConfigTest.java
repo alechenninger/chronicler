@@ -64,6 +64,6 @@ public class DefaultChroniclerConfigTest {
     errorCollector.checkThat(config.user(), is("my_user"));
     errorCollector.checkThat(config.workspace(), is("my_workspace"));
     errorCollector.checkThat(config.sourcePlugin(), is(Paths.get("~/path/to/plugin")));
-    errorCollector.checkThat(config.pluginArgs(), equalTo(null));
+    errorCollector.checkThat(config.pluginArgs(), equalTo(new String[0]));
   }
 }
