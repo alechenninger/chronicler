@@ -18,4 +18,8 @@ public class CmdLineChroniclerConfigTest {
     assertEquals(Paths.get(System.getProperty("user.home"), ".chronicler", "config.json"),
         config.config());
   }
+
+  public String[] args(String... args) {
+    return args;
+  }
 }

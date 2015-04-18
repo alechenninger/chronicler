@@ -15,7 +15,7 @@ public class ConfigFactory {
     File jsonConfig = cmdLineConfig.config().toFile();
 
     if (jsonConfig.exists()) {
-      return fromJson(jsonConfig).overridedWith(cmdLineConfig);
+      return new OverriddenChroniclerConfig(fromJson(jsonConfig), cmdLineConfig);
     }
 
     return cmdLineConfig;

@@ -1,5 +1,7 @@
 package com.github.alechenninger.chronicler.config;
 
+import com.github.alechenninger.chronicler.ChroniclerException;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -7,6 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class DefaultChroniclerConfig implements ChroniclerConfig {
   private final String apiKey;
@@ -22,7 +25,7 @@ public class DefaultChroniclerConfig implements ChroniclerConfig {
       @JsonProperty("sourcePlugin") SourcePluginConfig sourcePluginConfig,
       @JsonProperty("user") String user, @JsonProperty("workspace") String workspace) {
     this.apiKey = apiKey;
-    this.server = URI.create(server);
+    this.server = Optional.ofNullable(server).map(URI::create).orElse(null);
     this.sourcePlugin = sourcePluginConfig.sourcePlugin();
     this.pluginArgs = sourcePluginConfig.args();
     this.user = user;
@@ -31,31 +34,55 @@ public class DefaultChroniclerConfig implements ChroniclerConfig {
 
   @Override
   public String apiKey() {
+    if (apiKey == null) {
+      throw new ChroniclerException("Null apiKey");
+    }
+
     return apiKey;
   }
 
   @Override
   public URI server() throws URISyntaxException {
+    if (server == null) {
+      throw new ChroniclerException("Null server");
+    }
+
     return server;
   }
 
   @Override
   public Path sourcePlugin() {
+    if (sourcePlugin == null) {
+      throw new ChroniclerException("Null sourcePlugin");
+    }
+
     return sourcePlugin;
   }
 
   @Override
   public String user() {
+    if (user == null) {
+      throw new ChroniclerException("Null user");
+    }
+
     return user;
   }
 
   @Override
   public String workspace() {
+    if (workspace == null) {
+      throw new ChroniclerException("Null workspace");
+    }
+
     return workspace;
   }
 
   @Override
   public String[] pluginArgs() {
+    if (pluginArgs == null) {
+      return new String[0];
+    }
+
     return pluginArgs;
   }
 
