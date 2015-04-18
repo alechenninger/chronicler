@@ -1,14 +1,12 @@
 package com.github.alechenninger.chronicler.rally;
 
-import com.github.alechenninger.chronicler.RallyTimeSheetUploader;
-
 import com.google.gson.JsonObject;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 
-public class TimeEntryValue {
+class TimeEntryValue {
   private final String timeEntryItemId;
   private final Date date;
   private final BigDecimal hours;

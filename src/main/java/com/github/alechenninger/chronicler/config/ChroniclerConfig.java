@@ -1,10 +1,10 @@
-package com.github.alechenninger.chronicler;
+package com.github.alechenninger.chronicler.config;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 
-public interface ChroniclerOptions {
+public interface ChroniclerConfig {
   String apiKey();
 
   URI server() throws URISyntaxException;
@@ -15,13 +15,15 @@ public interface ChroniclerOptions {
 
   String workspace();
 
+  String[] pluginArgs();
+
   /**
-   * @return A new {@link ChroniclerOptions} instance with non-{@code null} values of the provided
+   * @return A new {@link ChroniclerConfig} instance with non-{@code null} values of the provided
    * options being used preferentially.
    */
-  default ChroniclerOptions overridedWith(ChroniclerOptions override) {
-    return new ChroniclerOptions() {
-      private final ChroniclerOptions original = ChroniclerOptions.this;
+  default ChroniclerConfig overridedWith(ChroniclerConfig override) {
+    return new ChroniclerConfig() {
+      private final ChroniclerConfig original = ChroniclerConfig.this;
 
       @Override
       public String apiKey() {
@@ -46,6 +48,11 @@ public interface ChroniclerOptions {
       @Override
       public String workspace() {
         return override.workspace() != null ? override.workspace() : original.workspace();
+      }
+
+      @Override
+      public String[] pluginArgs() {
+        return override.pluginArgs() != null ? override.pluginArgs() : original.pluginArgs();
       }
     };
   }

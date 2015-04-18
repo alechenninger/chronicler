@@ -12,7 +12,7 @@
 
   <groupId>com.github.alechenninger</groupId>
   <artifactId>chronicler</artifactId>
-  <version>1.1.0</version>
+  <version>2.0.0</version>
 
   <build>
     <plugins>
@@ -25,27 +25,21 @@
         </configuration>
       </plugin>
       <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.5.3</version>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>appassembler-maven-plugin</artifactId>
+        <version>1.10</version>
         <configuration>
-          <archive>
-            <manifest>
+          <programs>
+            <program>
               <mainClass>com.github.alechenninger.chronicler.Chronicler</mainClass>
-            </manifest>
-          </archive>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-          <finalName>${artifactId}-${version}-standalone</finalName>
-          <appendAssemblyId>false</appendAssemblyId>
-          <attach>false</attach> <!-- Whether it will be deployed with mvn deploy or not -->
+              <name>chronicler</name>
+            </program>
+          </programs>
         </configuration>
         <executions>
           <execution>
-            <id>make-assembly</id> <!-- this is used for inheritance merges -->
-            <phase>package</phase> <!-- bind to the packaging phase -->
             <goals>
-              <goal>single</goal>
+              <goal>assemble</goal>
             </goals>
           </execution>
         </executions>

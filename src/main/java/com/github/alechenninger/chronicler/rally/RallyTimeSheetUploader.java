@@ -1,9 +1,12 @@
-package com.github.alechenninger.chronicler;
+package com.github.alechenninger.chronicler.rally;
 
+import com.github.alechenninger.chronicler.ChroniclerException;
+import com.github.alechenninger.chronicler.TimeEntry;
+import com.github.alechenninger.chronicler.TimeEntryCoordinates;
+import com.github.alechenninger.chronicler.TimeSheet;
+import com.github.alechenninger.chronicler.TimeSheetUploader;
 import com.github.alechenninger.chronicler.console.Exit;
 import com.github.alechenninger.chronicler.console.Prompter;
-import com.github.alechenninger.chronicler.rally.TimeEntryItem;
-import com.github.alechenninger.chronicler.rally.TimeEntryValue;
 
 import com.rallydev.rest.RallyRestApi;
 import com.rallydev.rest.request.CreateRequest;
@@ -14,6 +17,7 @@ import com.rallydev.rest.util.Fetch;
 import com.rallydev.rest.util.QueryFilter;
 
 import java.io.IOException;
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
@@ -46,6 +50,26 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
   public static final DateFormat ISO_8601_UTC = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'") {{
     setTimeZone(TimeZone.getTimeZone("UTC"));
   }};
+
+  private static RallyRestApi getRallyRestApi(URI server, String apiKey) {
+    RallyRestApi rally = new RallyRestApi(server, apiKey);
+    rally.setWsapiVersion("v2.0");
+
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      try {
+        rally.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }));
+
+    return rally;
+  }
+
+  public RallyTimeSheetUploader(URI server, String apiKey, String user, String workspaceName,
+      Prompter prompter, Exit exit) {
+    this(getRallyRestApi(server, apiKey), user, workspaceName, prompter, exit);
+  }
 
   public RallyTimeSheetUploader(RallyRestApi rally, String user, String workspaceName,
       Prompter prompter, Exit exit) {

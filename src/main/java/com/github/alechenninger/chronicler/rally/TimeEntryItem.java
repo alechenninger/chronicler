@@ -1,14 +1,11 @@
 package com.github.alechenninger.chronicler.rally;
 
-import com.github.alechenninger.chronicler.RallyTimeSheetUploader;
-
 import com.google.gson.JsonObject;
-import com.google.gson.annotations.SerializedName;
 
 import java.util.Date;
 import java.util.Optional;
 
-public class TimeEntryItem {
+class TimeEntryItem {
   private final String projectId;
   private final String workProductId;
   private final Optional<String> taskId;

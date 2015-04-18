@@ -1,11 +1,12 @@
-package com.github.alechenninger.chronicler;
+package com.github.alechenninger.chronicler.config;
+
+import com.github.alechenninger.chronicler.ChroniclerException;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
@@ -15,7 +16,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 
-public class CmdLineChroniclerOptions implements ChroniclerOptions {
+public class CmdLineChroniclerConfig implements ChroniclerConfig {
+  private static final Path USER_HOME = Paths.get(System.getProperty("user.home"));
+  private static final Path DEFAULT_CONFIG_DIR = USER_HOME.resolve(".chronicler/");
+  private static final Path DEFAULT_CONFIG = DEFAULT_CONFIG_DIR.resolve("config.json");
+
   private static Option API_KEY = new Option("k", "apiKey", true,
       "Rally API key. To generate or access API keys for your account, go to " +
       "'https://rally1.rallydev.com/login' and see 'API KEYS' in the top menu.");
@@ -35,8 +40,8 @@ public class CmdLineChroniclerOptions implements ChroniclerOptions {
 
   private static Option HELP = new Option("h", "help", false, "Show this menu.");
 
-  private static Option CONFIG = new Option("c", "config", true, "Path to json config file. Defaults"
-      + " to ~/.chronicler/config.json");
+  private static Option CONFIG = new Option("c", "config", true, "Path to json config file. "
+      + "Defaults to " + DEFAULT_CONFIG);
 
   private static Options OPTIONS = new Options()
       .addOption(API_KEY)
@@ -44,15 +49,16 @@ public class CmdLineChroniclerOptions implements ChroniclerOptions {
       .addOption(SOURCE)
       .addOption(USER)
       .addOption(WORKSPACE)
+      .addOption(CONFIG)
       .addOption(HELP);
 
   private final CommandLine cli;
 
-  public CmdLineChroniclerOptions(String[] args) throws ParseException {
+  public CmdLineChroniclerConfig(String[] args) throws ParseException {
     this(args, new BasicParser());
   }
 
-  public CmdLineChroniclerOptions(String[] args, CommandLineParser parser) throws ParseException {
+  public CmdLineChroniclerConfig(String[] args, CommandLineParser parser) throws ParseException {
     cli = parser.parse(OPTIONS, args, true);
   }
 
@@ -77,7 +83,7 @@ public class CmdLineChroniclerOptions implements ChroniclerOptions {
   @Override
   public Path sourcePlugin() {
     if (!cli.hasOption(SOURCE.getOpt())) {
-      throw new ChroniclerException("No report type specified: " + SOURCE);
+      throw new ChroniclerException("No source plugin specified: " + SOURCE);
     }
 
     return Paths.get(cli.getOptionValue(SOURCE.getOpt()));
@@ -101,9 +107,21 @@ public class CmdLineChroniclerOptions implements ChroniclerOptions {
     return cli.getOptionValue(WORKSPACE.getOpt());
   }
 
-  public Optional<Path> config() {
-    return Optional.ofNullable(cli.getOptionValue(CONFIG.getOpt()))
-        .map(Paths::get);
+  @Override
+  public String[] pluginArgs() {
+    return additionalArgs();
+  }
+
+  public Path config() {
+    Path config = Optional.ofNullable(cli.getOptionValue(CONFIG.getOpt()))
+        .map(Paths::get)
+        .orElse(DEFAULT_CONFIG);
+
+    if (!config.isAbsolute()) {
+      config = DEFAULT_CONFIG_DIR.resolve(config);
+    }
+
+    return config;
   }
 
   public boolean helpRequested() {
@@ -115,6 +133,11 @@ public class CmdLineChroniclerOptions implements ChroniclerOptions {
    */
   public String[] additionalArgs() {
     return cli.getArgs();
+  }
+
+  public static boolean helpRequested(String[] args) throws ParseException {
+    CmdLineChroniclerConfig config = new CmdLineChroniclerConfig(args);
+    return config.helpRequested();
   }
 
   public static void printHelpMessage() {
