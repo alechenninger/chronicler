@@ -30,10 +30,16 @@ Sample config.json:
 
 ```
 
-When you run chronicler, you'll generally still need to supply some arguments to source plugins. For instance, if they read your timesheet data from a file or files, you'll need to pass paths to those files.
+When you run chronicler, you'll generally still need to supply some arguments on the command line for source plugins. For instance, if they read your timesheet data from a file or files, you'll need to pass paths to those files.
+
+Here is an example command using the hamster plugin, assuming it is configured in the config.json:
+
+```bash
+chronicler -hc categories.json -hr report.xml
+```
 
 ## Source plugins
 
-[chronicler-hamster][1] is a plugin for [Hamster](https://github.com/projecthamster/hamster) activity reports.
+- [chronicler-hamster][1] is a plugin for [Hamster](https://github.com/projecthamster/hamster) activity reports.
 
 [1]: https://github.com/alechenninger/chronicler-hamster
