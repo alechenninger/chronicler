@@ -4,7 +4,11 @@ Chronicler is a command line java application which takes some time sheet report
 
 I suppose it could also be flexible about where the destination is, and perhaps could be more than Rally one day.
 
-# Using
+## Requirements
+
+- Java 8 jre
+
+## Using
 
 Download binary from release tab. Put in PATH if you like.
 
