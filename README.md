@@ -7,6 +7,7 @@ I suppose it could also be flexible about where the destination is, and perhaps 
 ## Requirements
 
 - Java 8 jre
+- Rally api key setup here: https://rally1.rallydev.com/login
 
 ## Using
 
