@@ -8,27 +8,27 @@ import java.nio.file.Path;
 
 public interface ChroniclerConfig {
   /**
-   * @throws ChroniclerException If no api key is defined.
+   * @throws java.util.NoSuchElementException If no api key is defined.
    */
   String apiKey();
 
   /**
-   * @throws ChroniclerException If no server is defined.
+   * @throws java.util.NoSuchElementException If no server is defined.
    */
   URI server() throws URISyntaxException;
 
   /**
-   * @throws ChroniclerException If no sourcePlugin is defined.
+   * @throws java.util.NoSuchElementException If no sourcePlugin is defined.
    */
   Path sourcePlugin();
 
   /**
-   * @throws ChroniclerException If no user is defined.
+   * @throws java.util.NoSuchElementException If no user is defined.
    */
   String user();
 
   /**
-   * @throws ChroniclerException If no workspace is defined.
+   * @throws java.util.NoSuchElementException If no workspace is defined.
    */
   String workspace();
 

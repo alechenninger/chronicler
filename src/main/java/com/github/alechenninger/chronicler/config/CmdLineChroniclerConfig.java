@@ -1,7 +1,5 @@
 package com.github.alechenninger.chronicler.config;
 
-import com.github.alechenninger.chronicler.ChroniclerException;
-
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -14,6 +12,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 public class CmdLineChroniclerConfig implements ChroniclerConfig {
@@ -43,6 +42,9 @@ public class CmdLineChroniclerConfig implements ChroniclerConfig {
   private static Option CONFIG = new Option("c", "config", true, "Path to json config file. "
       + "Defaults to " + DEFAULT_CONFIG);
 
+  private static Option VERSION = new Option("v", "version", false, "Prints the current version of "
+      + "Chronicler and source plugin, if provided.");
+
   private static Options OPTIONS = new Options()
       .addOption(API_KEY)
       .addOption(SERVER)
@@ -50,7 +52,8 @@ public class CmdLineChroniclerConfig implements ChroniclerConfig {
       .addOption(USER)
       .addOption(WORKSPACE)
       .addOption(CONFIG)
-      .addOption(HELP);
+      .addOption(HELP)
+      .addOption(VERSION);
 
   private final CommandLine cli;
 
@@ -65,7 +68,7 @@ public class CmdLineChroniclerConfig implements ChroniclerConfig {
   @Override
   public String apiKey() {
     if (!cli.hasOption(API_KEY.getOpt())) {
-      throw new ChroniclerException("No api key specified: " + API_KEY);
+      throw new NoSuchElementException("No api key specified: " + API_KEY);
     }
 
     return cli.getOptionValue(API_KEY.getOpt());
@@ -83,7 +86,7 @@ public class CmdLineChroniclerConfig implements ChroniclerConfig {
   @Override
   public Path sourcePlugin() {
     if (!cli.hasOption(SOURCE.getOpt())) {
-      throw new ChroniclerException("No source plugin specified: " + SOURCE);
+      throw new NoSuchElementException("No source plugin specified: " + SOURCE);
     }
 
     return Paths.get(cli.getOptionValue(SOURCE.getOpt()));
@@ -92,7 +95,7 @@ public class CmdLineChroniclerConfig implements ChroniclerConfig {
   @Override
   public String user() {
     if (!cli.hasOption(USER.getOpt())) {
-      throw new ChroniclerException("No user specified: " + USER);
+      throw new NoSuchElementException("No user specified: " + USER);
     }
 
     return cli.getOptionValue(USER.getOpt());
@@ -101,7 +104,7 @@ public class CmdLineChroniclerConfig implements ChroniclerConfig {
   @Override
   public String workspace() {
     if (!cli.hasOption(WORKSPACE.getOpt())) {
-      throw new ChroniclerException("No workspace specified: " + WORKSPACE);
+      throw new NoSuchElementException("No workspace specified: " + WORKSPACE);
     }
 
     return cli.getOptionValue(WORKSPACE.getOpt());
@@ -128,6 +131,10 @@ public class CmdLineChroniclerConfig implements ChroniclerConfig {
     return cli.hasOption(HELP.getOpt());
   }
 
+  public boolean versionRequested() {
+    return cli.hasOption(VERSION.getOpt());
+  }
+
   /**
    * Additional arguments passed that were not parsed among base set of options.
    */
@@ -140,9 +147,14 @@ public class CmdLineChroniclerConfig implements ChroniclerConfig {
     return config.helpRequested();
   }
 
+  public static boolean versionRequested(String[] args) throws ParseException {
+    CmdLineChroniclerConfig config = new CmdLineChroniclerConfig(args);
+    return config.versionRequested();
+  }
+
   public static void printHelpMessage() {
     HelpFormatter help = new HelpFormatter();
-    help.printHelp("java -jar path-to-jar.jar",
+    help.printHelp("chronicler",
         "Uploads a timesheet report to Rally timesheets.",
         OPTIONS,
         "https://github.com/alechenninger/chronicler.git",

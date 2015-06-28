@@ -1,7 +1,5 @@
 package com.github.alechenninger.chronicler.config;
 
-import com.github.alechenninger.chronicler.ChroniclerException;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -9,6 +7,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 public class DefaultChroniclerConfig implements ChroniclerConfig {
@@ -35,7 +34,7 @@ public class DefaultChroniclerConfig implements ChroniclerConfig {
   @Override
   public String apiKey() {
     if (apiKey == null) {
-      throw new ChroniclerException("Null apiKey");
+      throw new NoSuchElementException("Null apiKey");
     }
 
     return apiKey;
@@ -44,7 +43,7 @@ public class DefaultChroniclerConfig implements ChroniclerConfig {
   @Override
   public URI server() throws URISyntaxException {
     if (server == null) {
-      throw new ChroniclerException("Null server");
+      throw new NoSuchElementException("Null server");
     }
 
     return server;
@@ -53,7 +52,7 @@ public class DefaultChroniclerConfig implements ChroniclerConfig {
   @Override
   public Path sourcePlugin() {
     if (sourcePlugin == null) {
-      throw new ChroniclerException("Null sourcePlugin");
+      throw new NoSuchElementException("Null sourcePlugin");
     }
 
     return sourcePlugin;
@@ -62,7 +61,7 @@ public class DefaultChroniclerConfig implements ChroniclerConfig {
   @Override
   public String user() {
     if (user == null) {
-      throw new ChroniclerException("Null user");
+      throw new NoSuchElementException("Null user");
     }
 
     return user;
@@ -71,7 +70,7 @@ public class DefaultChroniclerConfig implements ChroniclerConfig {
   @Override
   public String workspace() {
     if (workspace == null) {
-      throw new ChroniclerException("Null workspace");
+      throw new NoSuchElementException("Null workspace");
     }
 
     return workspace;

@@ -1,10 +1,9 @@
 package com.github.alechenninger.chronicler.config;
 
-import com.github.alechenninger.chronicler.ChroniclerException;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 public class OverriddenChroniclerConfig implements ChroniclerConfig {
@@ -25,7 +24,7 @@ public class OverriddenChroniclerConfig implements ChroniclerConfig {
   public URI server() throws URISyntaxException {
     try {
       return override.server();
-    } catch (ChroniclerException e) {
+    } catch (NoSuchElementException e) {
       return original.server();
     }
   }
@@ -58,7 +57,7 @@ public class OverriddenChroniclerConfig implements ChroniclerConfig {
   private <T> T getOverrideOrOriginal(Function<ChroniclerConfig, T> property) {
     try {
       return property.apply(override);
-    } catch (ChroniclerException e) {
+    } catch (NoSuchElementException e) {
       return property.apply(original);
     }
   }
