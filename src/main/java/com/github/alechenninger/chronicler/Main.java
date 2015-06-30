@@ -38,8 +38,8 @@ public abstract class Main {
     }
   }
 
-  private static Runnable getRunnable(String[] args, ChroniclerConfig config, Optional<Plugin>
-      maybePlugin) throws ParseException, URISyntaxException {
+  private static Runnable getRunnable(String[] args, ChroniclerConfig config,
+      Optional<Plugin> maybePlugin) throws ParseException, URISyntaxException {
     if (CmdLineChroniclerConfig.helpRequested(args)) {
       return new HelpPrinter(maybePlugin);
     }

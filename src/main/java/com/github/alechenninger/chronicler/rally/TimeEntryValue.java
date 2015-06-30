@@ -7,18 +7,20 @@ import com.google.gson.JsonObject;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 class TimeEntryValue {
   private final String timeEntryItemId;
-  private final Date date;
+  private final ZonedDateTime date;
   private final BigDecimal hours;
 
-  public TimeEntryValue(String timeEntryItemId, Date date, Float hours) {
+  public TimeEntryValue(String timeEntryItemId, ZonedDateTime date, Float hours) {
     this(timeEntryItemId, date, new BigDecimal(String.valueOf(hours)));
   }
 
-  public TimeEntryValue(String timeEntryItemId, Date date, BigDecimal hours) {
+  public TimeEntryValue(String timeEntryItemId, ZonedDateTime date, BigDecimal hours) {
     this.timeEntryItemId = timeEntryItemId;
     this.date = date;
     this.hours = hours;
@@ -28,7 +30,7 @@ class TimeEntryValue {
     return timeEntryItemId;
   }
 
-  public Date getDateVal() {
+  public ZonedDateTime getDateVal() {
     return date;
   }
 
@@ -45,8 +47,12 @@ class TimeEntryValue {
   }
 
   public static TimeEntryValue fromJson(JsonObject json) throws ParseException {
-    String timeEntryItemId = json.get("TimeEntryItem").getAsString().replaceAll("/.*/", "");
-    Date date = RallyExternalTimeSheet.ISO_8601_UTC.parse(json.get("DateVal").getAsString());
+    // FIXME this is ugly
+    String timeEntryItemId = json.get("TimeEntryItem").getAsJsonObject().get("_ref")
+        .getAsString().replaceAll(".*timeentryitem/", "");
+    ZonedDateTime date = RallyExternalTimeSheet.ISO_8601_UTC
+        .parse(json.get("DateVal").getAsString(), LocalDateTime::from)
+        .atZone(RallyExternalTimeSheet.ISO_8601_UTC.getZone());
     BigDecimal hours = new BigDecimal(json.get("Hours").getAsString());
     return new TimeEntryValue(timeEntryItemId, date, hours);
   }

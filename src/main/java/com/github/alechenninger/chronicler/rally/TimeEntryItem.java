@@ -2,6 +2,7 @@ package com.github.alechenninger.chronicler.rally;
 
 import com.google.gson.JsonObject;
 
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -10,9 +11,9 @@ class TimeEntryItem {
   private final String workProductId;
   private final Optional<String> taskId;
   private final String user;
-  private final Date weekStartDate;
+  private final ZonedDateTime weekStartDate;
 
-  public TimeEntryItem(String projectId, String workProductId, String user, Date weekStartDate) {
+  public TimeEntryItem(String projectId, String workProductId, String user, ZonedDateTime weekStartDate) {
     this.projectId = projectId;
     this.workProductId = workProductId;
     this.taskId = Optional.empty();
@@ -21,7 +22,7 @@ class TimeEntryItem {
   }
 
   public TimeEntryItem(String projectId, String workProductId, String taskId, String user,
-      Date weekStartDate) {
+      ZonedDateTime weekStartDate) {
     this.projectId = projectId;
     this.workProductId = workProductId;
     this.taskId = Optional.of(taskId);
@@ -45,7 +46,7 @@ class TimeEntryItem {
     return user;
   }
 
-  public Date getWeekStartDate() {
+  public ZonedDateTime getWeekStartDate() {
     return weekStartDate;
   }
 

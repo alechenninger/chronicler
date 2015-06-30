@@ -1,13 +1,14 @@
 package com.github.alechenninger.chronicler;
 
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 public class TimeEntry {
   private final TimeEntryCoordinates coordinates;
-  private final Date day;
+  private final ZonedDateTime day;
   private final Float hours;
 
-  public TimeEntry(TimeEntryCoordinates coordinates, Date day, Float hours) {
+  public TimeEntry(TimeEntryCoordinates coordinates, ZonedDateTime day, Float hours) {
     this.coordinates = coordinates;
     this.day = day;
     this.hours = hours;
@@ -17,7 +18,7 @@ public class TimeEntry {
     return coordinates;
   }
 
-  public Date getDay() {
+  public ZonedDateTime getDay() {
     return day;
   }
 

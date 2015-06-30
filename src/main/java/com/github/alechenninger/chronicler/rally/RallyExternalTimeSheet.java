@@ -26,6 +26,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Arrays;
@@ -50,9 +51,8 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
   private final Prompter prompter;
   private final Exit exit;
 
-  public static final DateFormat ISO_8601_UTC = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'") {{
-    setTimeZone(TimeZone.getTimeZone("UTC"));
-  }};
+  public static final DateTimeFormatter ISO_8601_UTC = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+      .withZone(ZoneId.of("UTC"));
 
   private static RallyRestApi getRallyRestApi(URI server, String apiKey) {
     RallyRestApi rally = new RallyRestApi(server, apiKey);
@@ -94,6 +94,7 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
       forMostRecentValue.setOrder("DateVal desc");
       forMostRecentValue.setLimit(1);
       forMostRecentValue.setQueryFilter(byUser);
+      forMostRecentValue.setPageSize(1);
 
       QueryResponse response = rally.query(forMostRecentValue);
 
@@ -110,9 +111,7 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
           .get(0)
           .getAsJsonObject());
 
-      return Optional.of(ZonedDateTime.ofInstant(
-          value.getDateVal().toInstant(),
-          ISO_8601_UTC.getTimeZone().toZoneId()));
+      return Optional.of(value.getDateVal());
     } catch (IOException | ParseException e) {
       throw new ChroniclerException(e);
     }
@@ -184,7 +183,7 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
 
   private String createTimeEntryItem(String projectId, String workProductId,
       Optional<String> taskId, TimeEntry entry) throws IOException {
-    Date weekStartDate = weekStartDate(entry.getDay());
+    ZonedDateTime weekStartDate = weekStartDate(entry.getDay());
 
     TimeEntryItem item = taskId
         .map(_taskId -> new TimeEntryItem(projectId, workProductId, _taskId, user, weekStartDate))
@@ -378,12 +377,9 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
         .getAsString();
   }
 
-  private Date weekStartDate(Date date) {
-    // Would love to just use java.time everywhere but has poor serialization library support
-    ZonedDateTime entryDate = date.toInstant().atZone(ZoneId.of("UTC"));
-    ZonedDateTime weekStartDate = entryDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+  private ZonedDateTime weekStartDate(ZonedDateTime date) {
+    return date.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
         .truncatedTo(ChronoUnit.DAYS);
-    return Date.from(weekStartDate.toInstant());
   }
 
   /**
@@ -411,11 +407,11 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
 
   private static final class CooordinatesByDay {
     final TimeEntryCoordinates coordinates;
-    final Date day;
+    final ZonedDateTime day;
 
-    CooordinatesByDay(TimeEntryCoordinates coordinates, Date day) {
+    CooordinatesByDay(TimeEntryCoordinates coordinates, ZonedDateTime day) {
       this.coordinates = coordinates;
-      this.day = Date.from(day.toInstant().truncatedTo(ChronoUnit.DAYS));
+      this.day = day.truncatedTo(ChronoUnit.DAYS);
     }
 
     @Override
