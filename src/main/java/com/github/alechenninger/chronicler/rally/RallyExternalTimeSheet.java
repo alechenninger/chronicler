@@ -18,25 +18,19 @@ import com.rallydev.rest.util.QueryFilter;
 
 import java.io.IOException;
 import java.net.URI;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.TimeZone;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -111,7 +105,8 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
           .get(0)
           .getAsJsonObject());
 
-      return Optional.of(value.getDateVal());
+      // Move to system time zone since Rally's precision is really only the day here.
+      return Optional.of(value.getDateVal().withZoneSameLocal(ZoneId.systemDefault()));
     } catch (IOException | ParseException e) {
       throw new ChroniclerException(e);
     }
@@ -183,7 +178,7 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
 
   private String createTimeEntryItem(String projectId, String workProductId,
       Optional<String> taskId, TimeEntry entry) throws IOException {
-    ZonedDateTime weekStartDate = weekStartDate(entry.getDay());
+    ZonedDateTime weekStartDate = weekStartDateUtc(entry.getDay());
 
     TimeEntryItem item = taskId
         .map(_taskId -> new TimeEntryItem(projectId, workProductId, _taskId, user, weekStartDate))
@@ -214,7 +209,7 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
     QueryFilter byWorkProduct = new QueryFilter("WorkProduct.ObjectID", "=", workProductId);
     QueryFilter byUserName = new QueryFilter("User.UserName", "=", user);
     QueryFilter byWeekStartDate = new QueryFilter("WeekStartDate", "=",
-        ISO_8601_UTC.format(weekStartDate(entry.getDay())));
+        ISO_8601_UTC.format(weekStartDateUtc(entry.getDay())));
 
     if (taskId.isPresent()) {
       QueryFilter byTask = new QueryFilter("Task.ObjectID", "=", taskId.get());
@@ -377,9 +372,10 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
         .getAsString();
   }
 
-  private ZonedDateTime weekStartDate(ZonedDateTime date) {
+  private ZonedDateTime weekStartDateUtc(ZonedDateTime date) {
     return date.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
-        .truncatedTo(ChronoUnit.DAYS);
+        .truncatedTo(ChronoUnit.DAYS)
+        .withZoneSameLocal(ISO_8601_UTC.getZone());
   }
 
   /**
