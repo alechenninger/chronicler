@@ -1,7 +1,5 @@
 package com.github.alechenninger.chronicler.config;
 
-import com.github.alechenninger.chronicler.ChroniclerException;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;

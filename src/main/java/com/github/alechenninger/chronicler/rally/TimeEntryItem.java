@@ -3,7 +3,6 @@ package com.github.alechenninger.chronicler.rally;
 import com.google.gson.JsonObject;
 
 import java.time.ZonedDateTime;
-import java.util.Date;
 import java.util.Optional;
 
 class TimeEntryItem {

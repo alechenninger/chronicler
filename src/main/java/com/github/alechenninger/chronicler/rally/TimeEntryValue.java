@@ -9,7 +9,6 @@ import java.math.RoundingMode;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 class TimeEntryValue {
   private final String timeEntryItemId;

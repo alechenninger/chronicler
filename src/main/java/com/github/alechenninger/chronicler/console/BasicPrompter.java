@@ -1,7 +1,6 @@
 package com.github.alechenninger.chronicler.console;
 
 import com.github.alechenninger.chronicler.ChroniclerException;
-import com.github.alechenninger.chronicler.console.Prompter;
 
 import java.io.BufferedReader;
 import java.io.IOException;

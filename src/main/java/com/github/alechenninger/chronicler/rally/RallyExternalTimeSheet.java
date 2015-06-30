@@ -1,10 +1,10 @@
 package com.github.alechenninger.chronicler.rally;
 
 import com.github.alechenninger.chronicler.ChroniclerException;
+import com.github.alechenninger.chronicler.ExternalTimeSheet;
 import com.github.alechenninger.chronicler.TimeEntry;
 import com.github.alechenninger.chronicler.TimeEntryCoordinates;
 import com.github.alechenninger.chronicler.TimeSheet;
-import com.github.alechenninger.chronicler.ExternalTimeSheet;
 import com.github.alechenninger.chronicler.console.Exit;
 import com.github.alechenninger.chronicler.console.Prompter;
 

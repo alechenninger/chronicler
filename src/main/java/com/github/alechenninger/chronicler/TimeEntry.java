@@ -1,7 +1,6 @@
 package com.github.alechenninger.chronicler;
 
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 public class TimeEntry {
   private final TimeEntryCoordinates coordinates;
