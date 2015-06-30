@@ -4,7 +4,7 @@ import com.github.alechenninger.chronicler.ChroniclerException;
 import com.github.alechenninger.chronicler.TimeEntry;
 import com.github.alechenninger.chronicler.TimeEntryCoordinates;
 import com.github.alechenninger.chronicler.TimeSheet;
-import com.github.alechenninger.chronicler.TimeSheetUploader;
+import com.github.alechenninger.chronicler.ExternalTimeSheet;
 import com.github.alechenninger.chronicler.console.Exit;
 import com.github.alechenninger.chronicler.console.Prompter;
 
@@ -19,8 +19,11 @@ import com.rallydev.rest.util.QueryFilter;
 import java.io.IOException;
 import java.net.URI;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
@@ -36,8 +39,8 @@ import java.util.TimeZone;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class RallyTimeSheetUploader implements TimeSheetUploader {
-  private static final Logger logger =  Logger.getLogger(RallyTimeSheetUploader.class.getName());
+public class RallyExternalTimeSheet implements ExternalTimeSheet {
+  private static final Logger logger =  Logger.getLogger(RallyExternalTimeSheet.class.getName());
 
   private static final String OBJECT_ID = "ObjectID";
 
@@ -66,18 +69,53 @@ public class RallyTimeSheetUploader implements TimeSheetUploader {
     return rally;
   }
 
-  public RallyTimeSheetUploader(URI server, String apiKey, String user, String workspaceName,
+  public RallyExternalTimeSheet(URI server, String apiKey, String user, String workspaceName,
       Prompter prompter, Exit exit) {
     this(getRallyRestApi(server, apiKey), user, workspaceName, prompter, exit);
   }
 
-  public RallyTimeSheetUploader(RallyRestApi rally, String user, String workspaceName,
+  public RallyExternalTimeSheet(RallyRestApi rally, String user, String workspaceName,
       Prompter prompter, Exit exit) {
     this.rally = Objects.requireNonNull(rally, "rally");
     this.user = Objects.requireNonNull(user, "user");
     this.workspaceName = Objects.requireNonNull(workspaceName, "workspaceName");
     this.prompter = Objects.requireNonNull(prompter, "prompter");
     this.exit = Objects.requireNonNull(exit, "prompter");
+  }
+
+  @Override
+  public Optional<ZonedDateTime> getLastRecordedEntryTime() {
+    try {
+      QueryRequest forMostRecentValue = new QueryRequest("timeentryvalue");
+      QueryFilter byUser = new QueryFilter("TimeEntryItem.User", "=", user);
+      String workspaceRef = workspaceRefByName(workspaceName);
+
+      forMostRecentValue.setWorkspace(workspaceRef);
+      forMostRecentValue.setOrder("DateVal desc");
+      forMostRecentValue.setLimit(1);
+      forMostRecentValue.setQueryFilter(byUser);
+
+      QueryResponse response = rally.query(forMostRecentValue);
+
+      if (!response.wasSuccessful()) {
+        throw new ChroniclerException("Failed to find most recent time entry value: "
+            + Arrays.toString(response.getErrors()));
+      }
+
+      if (response.getTotalResultCount() == 0) {
+        return Optional.empty();
+      }
+
+      TimeEntryValue value = TimeEntryValue.fromJson(response.getResults()
+          .get(0)
+          .getAsJsonObject());
+
+      return Optional.of(ZonedDateTime.ofInstant(
+          value.getDateVal().toInstant(),
+          ISO_8601_UTC.getTimeZone().toZoneId()));
+    } catch (IOException | ParseException e) {
+      throw new ChroniclerException(e);
+    }
   }
 
   @Override

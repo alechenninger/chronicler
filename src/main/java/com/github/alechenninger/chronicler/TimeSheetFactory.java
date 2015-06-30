@@ -1,11 +1,11 @@
 package com.github.alechenninger.chronicler;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Path;
-import java.util.ServiceLoader;
+import java.time.ZonedDateTime;
 
 public interface TimeSheetFactory {
   TimeSheet getTimeSheet(String[] additionalArgs);
+
+  default TimeSheet getTimeSheet(String[] additionalArgs, ZonedDateTime lastRecordedEntryTime) {
+    return getTimeSheet(additionalArgs);
+  }
 }

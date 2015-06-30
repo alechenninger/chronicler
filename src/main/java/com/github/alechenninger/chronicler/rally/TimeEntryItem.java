@@ -54,7 +54,7 @@ class TimeEntryItem {
     json.addProperty("Project", projectId);
     json.addProperty("WorkProduct", workProductId);
     taskId.ifPresent(t -> json.addProperty("Task", t));
-    json.addProperty("WeekStartDate", RallyTimeSheetUploader.ISO_8601_UTC.format(weekStartDate));
+    json.addProperty("WeekStartDate", RallyExternalTimeSheet.ISO_8601_UTC.format(weekStartDate));
     json.addProperty("User", user);
     return json;
   }

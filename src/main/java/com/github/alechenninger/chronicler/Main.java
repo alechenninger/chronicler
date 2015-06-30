@@ -5,9 +5,12 @@ import com.github.alechenninger.chronicler.config.CmdLineChroniclerConfig;
 import com.github.alechenninger.chronicler.config.ConfigFactory;
 import com.github.alechenninger.chronicler.console.Exit;
 import com.github.alechenninger.chronicler.console.Prompter;
-import com.github.alechenninger.chronicler.rally.RallyTimeSheetUploader;
+import com.github.alechenninger.chronicler.rally.RallyExternalTimeSheet;
+
+import org.apache.commons.cli.ParseException;
 
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -20,24 +23,7 @@ public abstract class Main {
     ChroniclerConfig config = configFactory.fromCommandLine(args);
     Optional<Plugin> maybePlugin = tryGetPlugin(config);
 
-    Runnable app;
-
-    if (CmdLineChroniclerConfig.helpRequested(args)) {
-      app = new HelpPrinter(maybePlugin);
-    } else if (CmdLineChroniclerConfig.versionRequested(args)) {
-      app = new VersionPrinter(VERSION, maybePlugin);
-    } else {
-      Plugin plugin = maybePlugin.orElseThrow(() -> new ChroniclerException(
-          "No Plugin.class implementation found.\n"
-              + "Make sure source plugin has an implementation's FQN inside "
-              + "META-INF/services/com.github.alechenninger.chronicler.Plugin"));
-
-      TimeSheetFactory timeSheetFactory = plugin.timeSheetFactory();
-      TimeSheetUploader uploader = new RallyTimeSheetUploader(config.server(), config.apiKey(),
-          config.user(), config.workspace(), Prompter.systemPrompt(), Exit.systemExit());
-
-      app = new Chronicler(uploader, timeSheetFactory, config.pluginArgs());
-    }
+    Runnable app = getRunnable(args, config, maybePlugin);
 
     app.run();
   }
@@ -50,5 +36,27 @@ public abstract class Main {
     } catch (NoSuchElementException e) {
       return Optional.empty();
     }
+  }
+
+  private static Runnable getRunnable(String[] args, ChroniclerConfig config, Optional<Plugin>
+      maybePlugin) throws ParseException, URISyntaxException {
+    if (CmdLineChroniclerConfig.helpRequested(args)) {
+      return new HelpPrinter(maybePlugin);
+    }
+
+    if (CmdLineChroniclerConfig.versionRequested(args)) {
+      return new VersionPrinter(VERSION, maybePlugin);
+    }
+
+    Plugin plugin = maybePlugin.orElseThrow(() -> new ChroniclerException(
+        "No Plugin.class implementation found.\n"
+            + "Make sure source plugin has an implementation's FQN inside "
+            + "META-INF/services/com.github.alechenninger.chronicler.Plugin"));
+
+    TimeSheetFactory timeSheetFactory = plugin.timeSheetFactory();
+    ExternalTimeSheet uploader = new RallyExternalTimeSheet(config.server(), config.apiKey(),
+        config.user(), config.workspace(), Prompter.systemPrompt(), Exit.systemExit());
+
+    return new Chronicler(uploader, timeSheetFactory, config.pluginArgs());
   }
 }

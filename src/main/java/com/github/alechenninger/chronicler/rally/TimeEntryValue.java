@@ -1,9 +1,12 @@
 package com.github.alechenninger.chronicler.rally;
 
+import com.github.alechenninger.chronicler.ChroniclerException;
+
 import com.google.gson.JsonObject;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.ParseException;
 import java.util.Date;
 
 class TimeEntryValue {
@@ -21,7 +24,7 @@ class TimeEntryValue {
     this.hours = hours;
   }
 
-  public String getTimeEntryItem() {
+  public String getTimeEntryItemId() {
     return timeEntryItemId;
   }
 
@@ -35,10 +38,25 @@ class TimeEntryValue {
 
   public JsonObject toJson() {
     JsonObject json = new JsonObject();
-    json.addProperty("TimeEntryItem", "/timeentryitem/" + getTimeEntryItem());
-    json.addProperty("DateVal", RallyTimeSheetUploader.ISO_8601_UTC.format(getDateVal()));
+    json.addProperty("TimeEntryItem", "/timeentryitem/" + getTimeEntryItemId());
+    json.addProperty("DateVal", RallyExternalTimeSheet.ISO_8601_UTC.format(getDateVal()));
     json.addProperty("Hours", getHours());
     return json;
+  }
+
+  public static TimeEntryValue fromJson(JsonObject json) throws ParseException {
+    String timeEntryItemId = json.get("TimeEntryItem").getAsString().replaceAll("/.*/", "");
+    Date date = RallyExternalTimeSheet.ISO_8601_UTC.parse(json.get("DateVal").getAsString());
+    BigDecimal hours = new BigDecimal(json.get("Hours").getAsString());
+    return new TimeEntryValue(timeEntryItemId, date, hours);
+  }
+
+  public static TimeEntryValue fromJsonQuietly(JsonObject json) {
+    try {
+      return fromJson(json);
+    } catch (ParseException e) {
+      throw new ChroniclerException(e);
+    }
   }
 
   @Override
