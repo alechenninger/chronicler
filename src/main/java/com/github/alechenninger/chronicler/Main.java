@@ -17,7 +17,7 @@ import java.util.Optional;
 
 public abstract class Main {
   private static final ConfigFactory configFactory = new ConfigFactory();
-  private static final String VERSION = "3.1.1";
+  private static final String VERSION = "3.1.2-SNAPSHOT";
 
   public static void main(String[] args) throws Exception {
     ChroniclerConfig config = configFactory.fromCommandLine(args);
