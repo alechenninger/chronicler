@@ -31,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -114,7 +116,7 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
 
   @Override
   public void uploadTimeSheet(TimeSheet timeSheet) {
-    List<TimeEntry> entries = consolidateEntries(timeSheet.getEntries());
+    SortedSet<TimeEntry> entries = consolidateEntries(timeSheet.getEntries());
 
     try {
       String workspaceRef = workspaceRefByName(workspaceName);
@@ -384,7 +386,7 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
    * day, which would cause a unique constraint violation. Instead we just sum any aligning entries
    * together.
    */
-  private List<TimeEntry> consolidateEntries(List<TimeEntry> entries) {
+  private SortedSet<TimeEntry> consolidateEntries(List<TimeEntry> entries) {
     Map<CooordinatesByDay, Float> consolidatedEntries = new HashMap<>();
 
     // Sum each day and coordinate combination
@@ -398,7 +400,7 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
     return consolidatedEntries.entrySet()
         .stream()
         .map(e -> new TimeEntry(e.getKey().coordinates, e.getKey().day, e.getValue()))
-        .collect(Collectors.toList());
+        .collect(Collectors.toCollection(TreeSet::new));
   }
 
   private static final class CooordinatesByDay {

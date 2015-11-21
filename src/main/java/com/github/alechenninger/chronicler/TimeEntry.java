@@ -2,7 +2,7 @@ package com.github.alechenninger.chronicler;
 
 import java.time.ZonedDateTime;
 
-public class TimeEntry {
+public class TimeEntry implements Comparable<TimeEntry> {
   private final TimeEntryCoordinates coordinates;
   private final ZonedDateTime day;
   private final Float hours;
@@ -23,6 +23,11 @@ public class TimeEntry {
 
   public Float getHours() {
     return hours;
+  }
+
+  @Override
+  public int compareTo(TimeEntry o) {
+    return day.compareTo(o.getDay());
   }
 
   @Override
