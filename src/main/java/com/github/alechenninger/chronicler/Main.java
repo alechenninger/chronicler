@@ -3,8 +3,6 @@ package com.github.alechenninger.chronicler;
 import com.github.alechenninger.chronicler.config.ChroniclerConfig;
 import com.github.alechenninger.chronicler.config.CmdLineChroniclerConfig;
 import com.github.alechenninger.chronicler.config.ConfigFactory;
-import com.github.alechenninger.chronicler.console.Exit;
-import com.github.alechenninger.chronicler.console.Prompter;
 import com.github.alechenninger.chronicler.rally.RallyExternalTimeSheet;
 
 import org.apache.commons.cli.ParseException;
@@ -55,7 +53,7 @@ public abstract class Main {
 
     TimeSheetFactory timeSheetFactory = plugin.timeSheetFactory();
     ExternalTimeSheet uploader = new RallyExternalTimeSheet(config.server(), config.apiKey(),
-        config.user(), config.workspace(), Prompter.systemPrompt(), Exit.systemExit());
+        config.user(), config.workspace());
 
     return new Chronicler(uploader, timeSheetFactory, config.pluginArgs());
   }

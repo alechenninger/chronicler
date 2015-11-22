@@ -5,8 +5,6 @@ import com.github.alechenninger.chronicler.ExternalTimeSheet;
 import com.github.alechenninger.chronicler.TimeEntry;
 import com.github.alechenninger.chronicler.TimeEntryCoordinates;
 import com.github.alechenninger.chronicler.TimeSheet;
-import com.github.alechenninger.chronicler.console.Exit;
-import com.github.alechenninger.chronicler.console.Prompter;
 
 import com.rallydev.rest.RallyRestApi;
 import com.rallydev.rest.request.CreateRequest;
@@ -42,8 +40,6 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
   private final RallyRestApi rally;
   private final String user;
   private final String workspaceName;
-  private final Prompter prompter;
-  private final Exit exit;
 
   public static final DateTimeFormatter ISO_8601_UTC = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
       .withZone(ZoneId.of("UTC"));
@@ -63,18 +59,14 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
     return rally;
   }
 
-  public RallyExternalTimeSheet(URI server, String apiKey, String user, String workspaceName,
-      Prompter prompter, Exit exit) {
-    this(getRallyRestApi(server, apiKey), user, workspaceName, prompter, exit);
+  public RallyExternalTimeSheet(URI server, String apiKey, String user, String workspaceName) {
+    this(getRallyRestApi(server, apiKey), user, workspaceName);
   }
 
-  public RallyExternalTimeSheet(RallyRestApi rally, String user, String workspaceName,
-      Prompter prompter, Exit exit) {
+  public RallyExternalTimeSheet(RallyRestApi rally, String user, String workspaceName) {
     this.rally = Objects.requireNonNull(rally, "rally");
     this.user = Objects.requireNonNull(user, "user");
     this.workspaceName = Objects.requireNonNull(workspaceName, "workspaceName");
-    this.prompter = Objects.requireNonNull(prompter, "prompter");
-    this.exit = Objects.requireNonNull(exit, "prompter");
   }
 
   @Override
