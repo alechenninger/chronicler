@@ -41,6 +41,10 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
   private final String user;
   private final String workspaceName;
 
+  private final Map<ProjectKey, String> projectIdCache = new HashMap<>();
+  private final Map<WorkProductKey, String> workProductIdCache = new HashMap<>();
+  private final Map<TaskKey, String> taskIdCache = new HashMap<>();
+
   public static final DateTimeFormatter ISO_8601_UTC = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
       .withZone(ZoneId.of("UTC"));
 
@@ -111,8 +115,6 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
     try {
       String workspaceRef = workspaceRefByName(workspaceName);
 
-      // TODO: Sort entries by project, work product, and week
-      // This means can get project, work product, and time entry item only once per combination
       for (TimeEntry entry : entries) {
         TimeEntryCoordinates coordinates = entry.getCoordinates();
 
@@ -120,19 +122,21 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
         String workProductId = workProductIdByNameAndProject(coordinates.getWorkProduct(),
             projectId, workspaceRef);
         Optional<String> taskId = coordinates.getTask()
-            .map((task) -> {
-              try {
-                return taskIdByNameAndWorkProduct(task, workProductId, workspaceRef);
-              } catch (IOException e) {
-                throw new ChroniclerException(e);
-              }
-            });
+            .map((task) -> taskIdByNameAndWorkProduct(task, workProductId, workspaceRef));
 
         String timeEntryItemId = ensureTimeEntryItem(workspaceRef, projectId, workProductId,
             taskId, entry);
 
         createTimeEntryValue(timeEntryItemId, entry);
       }
+    } catch (IOException e) {
+      throw new ChroniclerException(e);
+    }
+  }
+
+  private QueryResponse queryRally(QueryRequest request) {
+    try {
+      return rally.query(request);
     } catch (IOException e) {
       throw new ChroniclerException(e);
     }
@@ -237,82 +241,93 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
         .getAsString());
   }
 
-  private String taskIdByNameAndWorkProduct(String task, String workProductId, String workspaceRef)
-      throws IOException {
-    QueryRequest forTask = new QueryRequest("task");
-    QueryFilter byName = new QueryFilter("Name", "=", task);
-    QueryFilter byWorkProduct = new QueryFilter("WorkProduct.ObjectID", "=", workProductId);
+  private String taskIdByNameAndWorkProduct(String taskName, String workProductId, String workspaceRef) {
+    TaskKey taskKey = new TaskKey(taskName, workProductId, workspaceRef);
 
-    forTask.setQueryFilter(byName.and(byWorkProduct));
-    forTask.setWorkspace(workspaceRef);
-    forTask.setFetch(new Fetch(OBJECT_ID));
+    return taskIdCache.computeIfAbsent(taskKey, task -> {
+      QueryRequest forTask = new QueryRequest("task");
+      QueryFilter byName = new QueryFilter("Name", "=", taskName);
+      QueryFilter byWorkProduct = new QueryFilter("WorkProduct.ObjectID", "=", workProductId);
 
-    QueryResponse result = rally.query(forTask);
+      forTask.setQueryFilter(byName.and(byWorkProduct));
+      forTask.setWorkspace(workspaceRef);
+      forTask.setFetch(new Fetch(OBJECT_ID));
 
-    if (result.getTotalResultCount() == 0) {
-      throw new ChroniclerException("No tasks found for task name, " + task + ", and work product "
-          + "id, " + workProductId);
-    }
+      QueryResponse result = queryRally(forTask);
 
-    return result.getResults()
-        .get(0)
-        .getAsJsonObject()
-        .get(OBJECT_ID)
-        .getAsString();
+      if (result.getTotalResultCount() == 0) {
+        throw new ChroniclerException("No tasks found for task name, " + taskName + ", and work product "
+            + "id, " + workProductId);
+      }
+
+      return result.getResults()
+          .get(0)
+          .getAsJsonObject()
+          .get(OBJECT_ID)
+          .getAsString();
+    });
   }
 
-  private String workProductIdByNameAndProject(String workProduct, String projectId,
-      String workspaceRef) throws IOException {
-    QueryRequest forWorkProduct = new QueryRequest("artifact");
-    QueryFilter byName = new QueryFilter("Name", "=", workProduct);
-    QueryFilter byProject = new QueryFilter("Project.ObjectID", "=", projectId);
+  private String workProductIdByNameAndProject(String workProductName, String projectId,
+      String workspaceRef) {
+    WorkProductKey workProductKey = new WorkProductKey(workProductName, projectId, workspaceRef);
 
-    forWorkProduct.setQueryFilter(byName.and(byProject));
-    forWorkProduct.setWorkspace(workspaceRef);
-    forWorkProduct.setFetch(new Fetch(OBJECT_ID));
+    return workProductIdCache.computeIfAbsent(workProductKey, workProduct -> {
+      QueryRequest forWorkProduct = new QueryRequest("artifact");
+      QueryFilter byName = new QueryFilter("Name", "=", workProductName);
+      QueryFilter byProject = new QueryFilter("Project.ObjectID", "=", projectId);
 
-    QueryResponse result = rally.query(forWorkProduct);
+      forWorkProduct.setQueryFilter(byName.and(byProject));
+      forWorkProduct.setWorkspace(workspaceRef);
+      forWorkProduct.setFetch(new Fetch(OBJECT_ID));
 
-    if (result.getTotalResultCount() == 0) {
-      throw new ChroniclerException("No work products found for name, " + workProduct);
-    }
+      QueryResponse result = queryRally(forWorkProduct);
 
-    if (result.getTotalResultCount() > 1) {
-      throw new ChroniclerException("Multiple work products found for name, " + workProduct
-          + ". I'm afraid I may record something in the wrong place.");
-    }
+      if (result.getTotalResultCount() == 0) {
+        throw new ChroniclerException("No work products found for name, " + workProductName);
+      }
 
-    return result.getResults()
-        .get(0)
-        .getAsJsonObject()
-        .get(OBJECT_ID)
-        .getAsString();
+      if (result.getTotalResultCount() > 1) {
+        throw new ChroniclerException("Multiple work products found for name, " + workProductName
+            + ". I'm afraid I may record something in the wrong place.");
+      }
+
+      return result.getResults()
+          .get(0)
+          .getAsJsonObject()
+          .get(OBJECT_ID)
+          .getAsString();
+    });
   }
 
-  private String projectIdByName(String project, String workspaceRef) throws IOException {
-    QueryRequest forProject = new QueryRequest("project");
-    QueryFilter byName = new QueryFilter("Name", "=", project);
+  private String projectIdByName(String projectName, String workspaceRef) {
+    ProjectKey projectKey = new ProjectKey(projectName, workspaceRef);
 
-    forProject.setQueryFilter(byName);
-    forProject.setWorkspace(workspaceRef);
-    forProject.setFetch(new Fetch(OBJECT_ID));
+    return projectIdCache.computeIfAbsent(projectKey, project -> {
+      QueryRequest forProject = new QueryRequest("project");
+      QueryFilter byName = new QueryFilter("Name", "=", projectName);
 
-    QueryResponse result = rally.query(forProject);
+      forProject.setQueryFilter(byName);
+      forProject.setWorkspace(workspaceRef);
+      forProject.setFetch(new Fetch(OBJECT_ID));
 
-    if (result.getTotalResultCount() == 0) {
-      throw new ChroniclerException("No projects found for name, " + project);
-    }
+      QueryResponse result = queryRally(forProject);
 
-    if (result.getTotalResultCount() > 1) {
-      throw new ChroniclerException("Multiple projects found for name, " + project + ". I'm "
-          + "afraid I may record something in the wrong place.");
-    }
+      if (result.getTotalResultCount() == 0) {
+        throw new ChroniclerException("No projects found for name, " + projectName);
+      }
 
-    return result.getResults()
-        .get(0)
-        .getAsJsonObject()
-        .get(OBJECT_ID)
-        .getAsString();
+      if (result.getTotalResultCount() > 1) {
+        throw new ChroniclerException("Multiple projects found for name, " + projectName + ". I'm "
+            + "afraid I may record something in the wrong place.");
+      }
+
+      return result.getResults()
+          .get(0)
+          .getAsJsonObject()
+          .get(OBJECT_ID)
+          .getAsString();
+    });
   }
 
   private String workspaceRefByName(String workspace) throws IOException {
@@ -394,6 +409,96 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
         .collect(Collectors.toList());
   }
 
+  private static final class TaskKey {
+    final String taskName;
+    final String workProductId;
+    final String workspaceRef;
+
+    private TaskKey(String taskName, String workProductId, String workspaceRef) {
+      this.taskName = taskName;
+      this.workProductId = workProductId;
+      this.workspaceRef = workspaceRef;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      TaskKey taskKey = (TaskKey) o;
+      return Objects.equals(taskName, taskKey.taskName) &&
+          Objects.equals(workProductId, taskKey.workProductId) &&
+          Objects.equals(workspaceRef, taskKey.workspaceRef);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(taskName, workProductId, workspaceRef);
+    }
+  }
+
+  private static final class WorkProductKey {
+    final String workProductName;
+    final String projectId;
+    final String workspaceRef;
+
+    private WorkProductKey(String workProductName, String projectId, String workspaceRef) {
+      this.workProductName = workProductName;
+      this.projectId = projectId;
+      this.workspaceRef = workspaceRef;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      WorkProductKey that = (WorkProductKey) o;
+      return Objects.equals(workProductName, that.workProductName) &&
+          Objects.equals(projectId, that.projectId) &&
+          Objects.equals(workspaceRef, that.workspaceRef);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(workProductName, projectId, workspaceRef);
+    }
+  }
+
+  private static final class ProjectKey {
+    final String projectName;
+    final String workspaceRef;
+
+    private ProjectKey(String projectName, String workspaceRef) {
+      this.projectName = projectName;
+      this.workspaceRef = workspaceRef;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ProjectKey project = (ProjectKey) o;
+      return Objects.equals(projectName, project.projectName) &&
+          Objects.equals(workspaceRef, project.workspaceRef);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(projectName, workspaceRef);
+    }
+  }
+
   private static final class CooordinatesByDay {
     final TimeEntryCoordinates coordinates;
     final ZonedDateTime day;
@@ -411,17 +516,14 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-
       CooordinatesByDay that = (CooordinatesByDay) o;
-
-      return coordinates.equals(that.coordinates) && day.equals(that.day);
+      return Objects.equals(coordinates, that.coordinates) &&
+          Objects.equals(day, that.day);
     }
 
     @Override
     public int hashCode() {
-      int result = coordinates.hashCode();
-      result = 31 * result + day.hashCode();
-      return result;
+      return Objects.hash(coordinates, day);
     }
   }
 }
