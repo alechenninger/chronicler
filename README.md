@@ -42,5 +42,7 @@ chronicler -hc categories.json -hr report.xml
 ## Source plugins
 
 - [chronicler-hamster][1] is a plugin for [Hamster](https://github.com/projecthamster/hamster) activity reports.
+- [chronicler-toggl][2] is a plugin for [toggl.com](https://toggl.com)
 
 [1]: https://github.com/alechenninger/chronicler-hamster
+[2]: https://github.com/alechenninger/chronicler-toggl
