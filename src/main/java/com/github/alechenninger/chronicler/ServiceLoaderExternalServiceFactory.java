@@ -1,9 +1,11 @@
 package com.github.alechenninger.chronicler;
 
+import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -11,8 +13,13 @@ import java.util.ServiceLoader;
 public class ServiceLoaderExternalServiceFactory implements ExternalServiceFactory {
   private final ClassLoader classLoader;
 
-  public ServiceLoaderExternalServiceFactory(Path jarPath) throws MalformedURLException {
+  public ServiceLoaderExternalServiceFactory(Path jarPath) throws MalformedURLException,
+      FileNotFoundException {
     this(jarPath.toUri());
+
+    if (Files.notExists(jarPath)) {
+      throw new FileNotFoundException(jarPath.toString());
+    }
   }
 
   public ServiceLoaderExternalServiceFactory(URI jarUri) throws MalformedURLException {
