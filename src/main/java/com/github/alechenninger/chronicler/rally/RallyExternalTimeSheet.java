@@ -6,6 +6,8 @@ import com.github.alechenninger.chronicler.TimeEntry;
 import com.github.alechenninger.chronicler.TimeEntryCoordinates;
 import com.github.alechenninger.chronicler.TimeSheet;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.rallydev.rest.RallyRestApi;
 import com.rallydev.rest.request.CreateRequest;
 import com.rallydev.rest.request.QueryRequest;
@@ -18,11 +20,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.DayOfWeek;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -42,11 +46,22 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
   private final String workspaceName;
 
   private final Map<ProjectKey, String> projectIdCache = new HashMap<>();
-  private final Map<WorkProductKey, String> workProductIdCache = new HashMap<>();
+  private final Map<WorkProductKey, List<IdAndDate>> workProductIdCache = new HashMap<>();
   private final Map<TaskKey, String> taskIdCache = new HashMap<>();
 
-  public static final DateTimeFormatter ISO_8601_UTC = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-      .withZone(ZoneId.of("UTC"));
+  private static final class IdAndDate {
+    final String id;
+    final ZonedDateTime date;
+
+    private IdAndDate(String id, ZonedDateTime date) {
+      this.id = id;
+      this.date = date;
+    }
+  }
+
+  public static final DateTimeFormatter ISO_8601_UTC =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+          .withZone(ZoneId.of("UTC"));
 
   private static RallyRestApi getRallyRestApi(URI server, String apiKey) {
     RallyRestApi rally = new RallyRestApi(server, apiKey);
@@ -120,7 +135,7 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
 
         String projectId = projectIdByName(coordinates.getProject(), workspaceRef);
         String workProductId = workProductIdByNameAndProject(coordinates.getWorkProduct(),
-            projectId, workspaceRef);
+            projectId, workspaceRef, entry.getDay());
         Optional<String> taskId = coordinates.getTask()
             .map((task) -> taskIdByNameAndWorkProduct(task, workProductId, workspaceRef));
 
@@ -269,17 +284,18 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
   }
 
   private String workProductIdByNameAndProject(String workProductName, String projectId,
-      String workspaceRef) {
+      String workspaceRef, ZonedDateTime day) {
     WorkProductKey workProductKey = new WorkProductKey(workProductName, projectId, workspaceRef);
 
-    return workProductIdCache.computeIfAbsent(workProductKey, workProduct -> {
+    List<IdAndDate> products = workProductIdCache.computeIfAbsent(workProductKey, workProduct -> {
       QueryRequest forWorkProduct = new QueryRequest("artifact");
       QueryFilter byName = new QueryFilter("Name", "=", workProductName);
       QueryFilter byProject = new QueryFilter("Project.ObjectID", "=", projectId);
 
       forWorkProduct.setQueryFilter(byName.and(byProject));
       forWorkProduct.setWorkspace(workspaceRef);
-      forWorkProduct.setFetch(new Fetch(OBJECT_ID));
+      forWorkProduct.setFetch(new Fetch(OBJECT_ID, "CreationDate"));
+      forWorkProduct.setOrder("CreationDate DESC");
 
       QueryResponse result = queryRally(forWorkProduct);
 
@@ -288,16 +304,32 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
       }
 
       if (result.getTotalResultCount() > 1) {
-        throw new ChroniclerException("Multiple work products found for name, " + workProductName
-            + ". I'm afraid I may record something in the wrong place.");
+        logger.warning("Multiple results for work product found for name, " + workProductName +
+            ". Will choose latest one that is created before entry entered.");
       }
 
-      return result.getResults()
-          .get(0)
-          .getAsJsonObject()
-          .get(OBJECT_ID)
-          .getAsString();
+      List<IdAndDate> results = new ArrayList<>(result.getTotalResultCount());
+      for (JsonElement product : result.getResults()) {
+        JsonObject productObj = product.getAsJsonObject();
+        ZonedDateTime creationDate = RallyExternalTimeSheet.ISO_8601_UTC
+            .parse(productObj.get("CreationDate").getAsString(), LocalDateTime::from)
+            .atZone(RallyExternalTimeSheet.ISO_8601_UTC.getZone());
+        String id = productObj.get(OBJECT_ID).getAsString();
+        results.add(new IdAndDate(id, creationDate));
+      }
+
+      return results;
     });
+
+    if (products.size() == 1) {
+      return products.get(0).id;
+    }
+
+    return products.stream()
+        .filter(p -> !p.date.isAfter(day))
+        .findFirst()
+        .map(p -> p.id)
+        .orElse(products.get(0).id);
   }
 
   private String projectIdByName(String projectName, String workspaceRef) {
