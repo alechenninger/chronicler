@@ -8,7 +8,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 
 class TimeEntryValue {
   private final String timeEntryItemId;
@@ -21,7 +23,7 @@ class TimeEntryValue {
 
   public TimeEntryValue(String timeEntryItemId, ZonedDateTime date, BigDecimal hours) {
     this.timeEntryItemId = timeEntryItemId;
-    this.date = date;
+    this.date = date.truncatedTo(ChronoUnit.DAYS).withZoneSameLocal(ZoneOffset.UTC);
     this.hours = hours;
   }
 

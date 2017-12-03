@@ -11,12 +11,15 @@ import com.google.gson.JsonObject;
 import com.rallydev.rest.RallyRestApi;
 import com.rallydev.rest.request.CreateRequest;
 import com.rallydev.rest.request.QueryRequest;
+import com.rallydev.rest.request.UpdateRequest;
 import com.rallydev.rest.response.CreateResponse;
 import com.rallydev.rest.response.QueryResponse;
+import com.rallydev.rest.response.UpdateResponse;
 import com.rallydev.rest.util.Fetch;
 import com.rallydev.rest.util.QueryFilter;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.text.ParseException;
 import java.time.DayOfWeek;
@@ -142,7 +145,7 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
         String timeEntryItemId = ensureTimeEntryItem(workspaceRef, projectId, workProductId,
             taskId, entry);
 
-        createTimeEntryValue(timeEntryItemId, entry);
+        createTimeEntryValue(timeEntryItemId, entry, workspaceRef);
       }
     } catch (IOException e) {
       throw new ChroniclerException(e);
@@ -157,16 +160,54 @@ public class RallyExternalTimeSheet implements ExternalTimeSheet {
     }
   }
 
-  private void createTimeEntryValue(String timeEntryItemId, TimeEntry entry) throws IOException {
+  private void createTimeEntryValue(String timeEntryItemId, TimeEntry entry, String workspaceRef) throws IOException {
     TimeEntryValue value = new TimeEntryValue(timeEntryItemId, entry.getDay(), entry.getHours());
 
-    CreateRequest newTimeEntryValue = new CreateRequest("timeentryvalue", value.toJson());
-    CreateResponse response = rally.create(newTimeEntryValue);
+    QueryRequest forExistingValue = new QueryRequest("timeentryvalue");
+    QueryFilter byTimeEntry = new QueryFilter(
+        "TimeEntryItem", "=", "/timeentryitem/" + value.getTimeEntryItemId());
+    QueryFilter byDateVal =
+        new QueryFilter("DateVal", "=", ISO_8601_UTC.format(value.getDateVal()));
 
-    if (response.wasSuccessful()) {
-      logger.info("Successfully created time entry value, " + value);
-    } else {
+    forExistingValue.setWorkspace(workspaceRef);
+    forExistingValue.setOrder("DateVal desc");
+    forExistingValue.setLimit(1);
+    forExistingValue.setQueryFilter(byTimeEntry.and(byDateVal));
+    forExistingValue.setPageSize(1);
+
+    QueryResponse queryResponse = queryRally(forExistingValue);
+
+    if (queryResponse.getTotalResultCount() == 0) {
+      CreateRequest newTimeEntryValue = new CreateRequest("timeentryvalue", value.toJson());
+      CreateResponse response = rally.create(newTimeEntryValue);
+
+      if (response.wasSuccessful()) {
+        logger.info("Successfully created time entry value, " + value);
+        return;
+      }
+
       logger.severe("Failed to create time entry value, " + value + ", for entry, " + entry + ": "
+          + Arrays.toString(response.getErrors()));
+    } else {
+      JsonObject existing = (JsonObject) queryResponse.getResults().get(0);
+      BigDecimal hours = existing.get("Hours").getAsBigDecimal();
+
+      // BigDecimal.equals is not numeric equality
+      if (hours.compareTo(value.getHours()) == 0) {
+        logger.info("Existing time entry value, " + value + ", found with equivalent hours. " +
+            "Already in sync.");
+        return;
+      }
+
+      UpdateResponse response = rally.update(
+          new UpdateRequest(existing.get("_ref").getAsString(), value.toJson()));
+
+      if (response.wasSuccessful()) {
+        logger.info("Successfully updated time entry value to " + value + " from hours: " + hours);
+        return;
+      }
+
+      logger.severe("Failed to update time entry value, " + value + ", for entry, " + entry + ": "
           + Arrays.toString(response.getErrors()));
     }
   }
