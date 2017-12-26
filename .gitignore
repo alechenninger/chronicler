@@ -16,6 +16,7 @@ target/
 
 # IntelliJ
 .idea/
+*.iml
 
 bin/
 hamster/
